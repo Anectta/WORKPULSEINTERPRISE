@@ -69,6 +69,17 @@ npm run start
 
 ---
 
+## 🌐 Deploy, CI/CD & Integrações em Produção
+
+| Serviço | Provedor / URL | Status | Descrição |
+| :--- | :--- | :---: | :--- |
+| **Código-Fonte & CI/CD** | [GitHub - Anectta/WORKPULSEINTERPRISE](https://github.com/Anectta/WORKPULSEINTERPRISE) | ✅ Ativo | Repositório oficial com pipeline automatizado via GitHub Actions |
+| **Banco de Dados & Auth** | [Supabase Database](https://supabase.com) (`qaeyxuqsvkrovdciuyux`) | ✅ Conectado | PostgreSQL com RLS, GoTrue Auth e migrations versionadas |
+| **Hospedagem & CDN Edge** | [Vercel](https://vercel.com) | ✅ Deployed | Deploy contínuo integrado à branch `main` com HTTPS e Vite SPA |
+| **Velocímetro Net Pulse** | Módulo Nativo WorkPulse | ✅ Integrado | Cockpit gauge SVG 260°, onda de vazão em tempo real e laudo técnico |
+
+---
+
 ## 🔒 Princípios de Segurança (Zero Trust & DevSecOps)
 
 - **NEVER TRUST — ALWAYS VERIFY**: Validação explícita em todas as camadas (Token JWT + Tenant ID + RBAC + RLS no Banco).
