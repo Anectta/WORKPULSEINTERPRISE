@@ -1,0 +1,51 @@
+name: WorkPulse Enterprise & Backup Platform CI/CD
+
+on:
+  push:
+    branches: [ "main", "develop", "release/*" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-and-test:
+    name: Build, Typecheck, Security & Full Parity Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment (LTS 22)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci || npm install
+
+      - name: Typecheck & Static Code Analysis (Lint)
+        run: npm run lint
+
+      - name: Execute Master Test Suite (12 Suites / 158 Verifications)
+        run: npm run test
+        env:
+          NODE_ENV: test
+          SECURITY_HMAC_SECRET: "ci-test-hmac-sha256-secret-64-characters-long-key-for-testing-purpose"
+
+      - name: Production Bundle Compilation (Vite SPA + Bundled Server)
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Verify Build Artifacts
+        run: |
+          test -d dist || exit 1
+          test -f dist/index.html || exit 1
+          test -f dist/server.cjs || exit 1
+          echo "✅ Production artifacts verified successfully."

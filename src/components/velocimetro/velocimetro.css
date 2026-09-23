@@ -1,0 +1,418 @@
+/**
+ * ANECTTA NETPULSE SPEED TELEMETRY - ESTILOS DO VELOCÍMETRO COCKPIT
+ * Integrado ao Design System do WorkPulse (Light / Dark Mode)
+ */
+
+/* Gauge Circular Cockpit (Velocímetro de Alta Precisão) */
+.netpulse-gauge-wrapper {
+  position: relative;
+  width: 290px;
+  height: 290px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+@media (min-width: 640px) {
+  .netpulse-gauge-wrapper {
+    width: 335px;
+    height: 335px;
+  }
+}
+
+/* Cards de Telemetria Quadrados (Proporção 1:1) */
+.netpulse-telemetry-compact {
+  padding: 12px 14px !important;
+  border-radius: 20px !important;
+  width: 145px !important;
+  min-width: 145px !important;
+  max-width: 145px !important;
+  height: 145px !important;
+  min-height: 145px !important;
+  max-height: 145px !important;
+  aspect-ratio: 1 / 1 !important;
+  box-sizing: border-box !important;
+}
+
+.netpulse-metric-card {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.netpulse-metric-card:hover {
+  transform: translateY(-2px);
+}
+
+.netpulse-metric-card.active-card {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 22px rgba(2, 132, 199, 0.32), inset 0 0 8px rgba(2, 132, 199, 0.08);
+  animation: netpulseCardFrisoPulse 2s ease-in-out infinite;
+  z-index: 5;
+}
+
+@keyframes netpulseCardFrisoPulse {
+  0%, 100% {
+    border-color: #0284c7;
+    box-shadow: 0 0 10px rgba(2, 132, 199, 0.22), inset 0 0 4px rgba(2, 132, 199, 0.05);
+  }
+  50% {
+    border-color: #00d2ff;
+    box-shadow: 0 0 28px rgba(0, 210, 255, 0.55), 0 0 8px rgba(2, 132, 199, 0.35), inset 0 0 12px rgba(0, 210, 255, 0.15);
+  }
+}
+
+/* Círculos Concêntricos por Fora do Velocímetro */
+.netpulse-gauge-external-rings {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.netpulse-ext-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
+  box-sizing: border-box;
+  transition: all 0.5s ease;
+}
+
+.netpulse-ext-ring-1 {
+  width: calc(100% + 12px);
+  height: calc(100% + 12px);
+  border: 1.5px solid rgba(14, 165, 233, 0.4);
+  box-shadow: 0 0 10px rgba(14, 165, 233, 0.15);
+  animation: netpulseRadiantWaveOuter 5.8s ease-in-out infinite;
+}
+
+.netpulse-ext-ring-2 {
+  width: calc(100% + 24px);
+  height: calc(100% + 24px);
+  border: 1px solid rgba(2, 132, 199, 0.25);
+  box-shadow: 0 0 14px rgba(2, 132, 199, 0.1);
+  animation: netpulseRadiantWaveInner 6.5s ease-in-out infinite 1.2s;
+}
+
+/* 3 Ondas Radiantes Concêntricas Externas */
+.netpulse-radiant-wave {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% + 12px);
+  height: calc(100% + 12px);
+  border-radius: 50%;
+  border: 1.5px solid rgba(14, 165, 233, 0.6);
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+.netpulse-radiant-wave-1 {
+  animation: netpulseRadiantWavePulse 4.5s cubic-bezier(0.16, 0.8, 0.36, 1) infinite;
+}
+
+.netpulse-radiant-wave-2 {
+  animation: netpulseRadiantWavePulse 4.5s cubic-bezier(0.16, 0.8, 0.36, 1) infinite 1.5s;
+}
+
+.netpulse-radiant-wave-3 {
+  animation: netpulseRadiantWavePulse 4.5s cubic-bezier(0.16, 0.8, 0.36, 1) infinite 3.0s;
+}
+
+@keyframes netpulseRadiantWavePulse {
+  0% {
+    transform: translate(-50%, -50%) scale(1.0);
+    opacity: 0.85;
+    border-color: rgba(14, 165, 233, 0.7);
+    box-shadow: 0 0 10px rgba(14, 165, 233, 0.45);
+  }
+  60% {
+    opacity: 0.35;
+    border-color: rgba(56, 189, 248, 0.4);
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.2);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.09);
+    opacity: 0;
+    border-color: rgba(2, 132, 199, 0);
+    box-shadow: 0 0 20px rgba(2, 132, 199, 0);
+  }
+}
+
+@keyframes netpulseRadiantWaveOuter {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(0.985);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.02);
+    opacity: 0.9;
+  }
+}
+
+@keyframes netpulseRadiantWaveInner {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(0.975);
+    opacity: 0.65;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.028);
+    opacity: 0.95;
+  }
+}
+
+/* Aura do Botão Central */
+.netpulse-button-halo-wrapper {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 18;
+}
+
+.netpulse-pulse-halo {
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+  border: 1px solid rgba(2, 132, 199, 0.35);
+  pointer-events: none;
+}
+
+.netpulse-pulse-halo-1 {
+  animation: startHaloPulse 4.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.netpulse-pulse-halo-2 {
+  animation: startHaloPulse 4.5s cubic-bezier(0.4, 0, 0.6, 1) infinite 1.5s;
+}
+
+.netpulse-pulse-halo-3 {
+  animation: startHaloPulse 4.5s cubic-bezier(0.4, 0, 0.6, 1) infinite 3.0s;
+}
+
+@keyframes startHaloPulse {
+  0% { transform: scale(0.95); opacity: 0.55; }
+  70% { transform: scale(1.28); opacity: 0; }
+  100% { transform: scale(1.28); opacity: 0; }
+}
+
+/* Botão Circular Central de Início */
+.netpulse-center-start-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #0284c7 0%, #0369a1 60%, #043959 100%);
+  border: 1.5px solid #0284c7;
+  box-shadow: 0 0 10px rgba(2, 132, 199, 0.25), inset 0 1px 3px rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 20;
+}
+
+.netpulse-center-start-btn:hover {
+  transform: translate(-50%, -50%) scale(1.08);
+  background: radial-gradient(circle at 35% 35%, #0369a1 0%, #0284c7 60%, #00f0ff 100%);
+  box-shadow: 0 0 30px rgba(0, 240, 255, 0.7), inset 0 2px 8px rgba(255, 255, 255, 0.85);
+  border-color: #ffffff;
+}
+
+.netpulse-center-start-btn:active {
+  transform: translate(-50%, -50%) scale(0.95);
+}
+
+/* Display Digital Central Fixo */
+.netpulse-center-display {
+  position: absolute;
+  top: 64%;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  pointer-events: none;
+  z-index: 15;
+  opacity: 1 !important;
+}
+
+.netpulse-speed-unit {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  color: #00d2ff;
+  text-shadow: 0 0 8px rgba(0, 210, 255, 0.6);
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.netpulse-speed-value {
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 1.55rem;
+  line-height: 1;
+  font-weight: 400;
+  color: #ffffff;
+  text-shadow: 0 0 16px rgba(56, 189, 248, 0.6), 0 2px 4px rgba(0, 0, 0, 0.7);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+@media (min-width: 640px) {
+  .netpulse-speed-value {
+    font-size: 1.95rem;
+  }
+}
+
+.netpulse-speed-brand {
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #ffffff;
+  text-transform: uppercase;
+  margin-top: 3px;
+  opacity: 0.95;
+  text-shadow: 0 0 6px rgba(0, 210, 255, 0.4), 0 1px 2px rgba(0, 0, 0, 0.85);
+  pointer-events: none;
+}
+
+.netpulse-speed-brand span {
+  color: #00d2ff;
+  font-weight: 900;
+}
+
+@media (min-width: 640px) {
+  .netpulse-speed-brand {
+    font-size: 0.68rem;
+    letter-spacing: 0.16em;
+    margin-top: 4px;
+  }
+}
+
+/* SVG Speedometer & Animações */
+.cockpit-speedometer-svg {
+  filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.75)) drop-shadow(0 0 12px rgba(2, 132, 199, 0.18));
+}
+
+.cockpit-neon-cyan-ring {
+  animation: cockpitCyanPulse 4s ease-in-out infinite;
+  transform-origin: 200px 200px;
+}
+
+.cockpit-neon-cyan-inner-ring {
+  animation: cockpitCyanInnerPulse 4s ease-in-out infinite;
+  animation-delay: 1s;
+  transform-origin: 200px 200px;
+}
+
+.cockpit-center-gear {
+  transform-origin: 200px 200px;
+  animation: cockpitGearRotate 30s linear infinite;
+}
+
+.cockpit-led-bar {
+  transition: fill 0.15s ease, opacity 0.15s ease, filter 0.15s ease;
+}
+
+@keyframes cockpitCyanPulse {
+  0%, 100% {
+    opacity: 0.75;
+    filter: drop-shadow(0 0 4px #0284c7);
+  }
+  50% {
+    opacity: 0.9;
+    filter: drop-shadow(0 0 8px #00d2ff);
+  }
+}
+
+@keyframes cockpitCyanInnerPulse {
+  0%, 100% {
+    opacity: 0.65;
+    filter: drop-shadow(0 0 2px #0284c7);
+  }
+  50% {
+    opacity: 0.85;
+    filter: drop-shadow(0 0 5px #0369a1);
+  }
+}
+
+@keyframes cockpitGearRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.cockpit-radiant-pulse-waves {
+  pointer-events: none;
+}
+
+.cockpit-wave-ring {
+  pointer-events: none;
+  transform-origin: 200px 200px;
+  opacity: 0;
+}
+
+@keyframes cockpitRadiantWavePulse {
+  0% {
+    r: 38px;
+    opacity: 0.95;
+    stroke-width: 2.8px;
+    filter: drop-shadow(0 0 6px #00d2ff);
+  }
+  50% {
+    opacity: 0.55;
+    stroke-width: 1.8px;
+    filter: drop-shadow(0 0 10px #00d2ff);
+  }
+  100% {
+    r: 148px;
+    opacity: 0;
+    stroke-width: 0.8px;
+    filter: drop-shadow(0 0 16px #00d2ff);
+  }
+}
+
+.speedtest-active .cockpit-wave-1 { animation: cockpitRadiantWavePulse 7.5s cubic-bezier(0.12, 0.7, 0.35, 1) infinite; }
+.speedtest-active .cockpit-wave-2 { animation: cockpitRadiantWavePulse 7.5s cubic-bezier(0.12, 0.7, 0.35, 1) infinite 1.8s; }
+.speedtest-active .cockpit-wave-3 { animation: cockpitRadiantWavePulse 7.5s cubic-bezier(0.12, 0.7, 0.35, 1) infinite 3.6s; }
+.speedtest-active .cockpit-wave-4 { animation: cockpitRadiantWavePulse 7.5s cubic-bezier(0.12, 0.7, 0.35, 1) infinite 5.4s; }
+
+.netpulse-chart-canvas {
+  width: 100%;
+  height: 100%;
+  min-height: 40px;
+  display: block;
+}
+
+.netpulse-chart-grid {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+  opacity: 0.2;
+}
+
+.netpulse-chart-grid-line {
+  width: 100%;
+  height: 1px;
+  border-top: 1px dashed rgba(148, 163, 184, 0.8);
+}

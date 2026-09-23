@@ -1,0 +1,391 @@
+{
+  "rooms": [
+    {
+      "id": "room_1787368578526_757s",
+      "name": "Sala de Reunião",
+      "category": "office",
+      "quadrantCode": "Q1",
+      "wingId": "wing_sala306",
+      "x": 420,
+      "y": 70,
+      "width": 250,
+      "height": 190,
+      "wallColor": "#2563eb",
+      "uplinkDevice": "main_switch",
+      "uplinkCableType": "SFTP CAT6 (Azul - Blindado)",
+      "uplinkVlan": "VLAN 100",
+      "uplinkSpeed": "1 Gbps RJ45",
+      "equipmentCount": 0,
+      "notes": "Anexo no Quadrante [Q1]",
+      "activeOnMap": true,
+      "doorWall": "right",
+      "doorOffset": 10,
+      "labelOffsetX": 50,
+      "labelOffsetY": 10
+    },
+    {
+      "id": "room_1787368614121_0dtb",
+      "name": "Corredor",
+      "category": "office",
+      "quadrantCode": "Q2",
+      "wingId": "wing_sala306",
+      "x": 790,
+      "y": 110,
+      "width": 320,
+      "height": 130,
+      "wallColor": "#2563eb",
+      "uplinkDevice": "main_switch",
+      "uplinkCableType": "SFTP CAT6 (Azul - Blindado)",
+      "uplinkVlan": "VLAN 100",
+      "uplinkSpeed": "1 Gbps RJ45",
+      "equipmentCount": 0,
+      "notes": "Anexo no Quadrante [Q2]",
+      "activeOnMap": true,
+      "doorWall": "right",
+      "doorOffset": 10,
+      "labelOffsetX": 30,
+      "labelOffsetY": 20
+    },
+    {
+      "id": "room_1787368662780_hon4",
+      "name": "Operacional",
+      "category": "office",
+      "quadrantCode": "Q3",
+      "wingId": "wing_sala306",
+      "x": 420,
+      "y": 270,
+      "width": 250,
+      "height": 410,
+      "wallColor": "#2563eb",
+      "uplinkDevice": "main_switch",
+      "uplinkCableType": "SFTP CAT6 (Azul - Blindado)",
+      "uplinkVlan": "VLAN 100",
+      "uplinkSpeed": "1 Gbps RJ45",
+      "equipmentCount": 0,
+      "notes": "Anexo no Quadrante [Q3]",
+      "activeOnMap": true,
+      "labelOffsetX": 240,
+      "labelOffsetY": 350,
+      "labelRotation": 90
+    },
+    {
+      "id": "room_1787369809465_y1go",
+      "name": "Supervisão",
+      "category": "office",
+      "quadrantCode": "Q4",
+      "wingId": "wing_sala306",
+      "x": 420,
+      "y": 380,
+      "width": 90,
+      "height": 190,
+      "wallColor": "#2563eb",
+      "uplinkDevice": "main_switch",
+      "uplinkCableType": "SFTP CAT6 (Azul - Blindado)",
+      "uplinkVlan": "VLAN 100",
+      "uplinkSpeed": "1 Gbps RJ45",
+      "equipmentCount": 0,
+      "notes": "Anexo no Quadrante [Q4]",
+      "activeOnMap": true,
+      "doorWall": "top",
+      "doorOffset": 10,
+      "labelOffsetX": 10,
+      "labelOffsetY": 120,
+      "labelRotation": 270
+    }
+  ],
+  "nodes": [
+    {
+      "id": "bench_pc_1",
+      "name": "PC Workstation 1",
+      "type": "pc",
+      "x": 168,
+      "y": 353,
+      "ip": "192.168.10.101",
+      "roomId": "room_operacoes"
+    },
+    {
+      "id": "bench_pc_2",
+      "name": "PC Workstation 2",
+      "type": "pc",
+      "x": 228,
+      "y": 353,
+      "ip": "192.168.10.102",
+      "roomId": "room_operacoes"
+    },
+    {
+      "id": "bench_pc_3",
+      "name": "PC Workstation 3",
+      "type": "pc",
+      "x": 288,
+      "y": 353,
+      "ip": "192.168.10.103",
+      "roomId": "room_operacoes"
+    },
+    {
+      "id": "supervisio_pc_1",
+      "name": "PC Supervisão 1",
+      "type": "pc",
+      "x": 98,
+      "y": 350,
+      "ip": "192.168.10.105",
+      "roomId": "room_operacoes"
+    },
+    {
+      "id": "supervisio_pc_2",
+      "name": "PC Supervisão 2",
+      "type": "pc",
+      "x": 98,
+      "y": 350,
+      "ip": "192.168.10.106",
+      "roomId": "room_operacoes"
+    },
+    {
+      "id": "island_pc_1",
+      "name": "PC Operacional 1",
+      "type": "pc",
+      "x": 127,
+      "y": 350,
+      "ip": "192.168.10.111",
+      "roomId": "room_operacoes"
+    },
+    {
+      "id": "island_pc_2",
+      "name": "PC Operacional 2",
+      "type": "pc",
+      "x": 127,
+      "y": 350,
+      "ip": "192.168.10.112",
+      "roomId": "room_operacoes"
+    },
+    {
+      "id": "island_pc_3",
+      "name": "PC Operacional 3",
+      "type": "pc",
+      "x": 127,
+      "y": 700,
+      "ip": "192.168.10.113",
+      "roomId": "room_operacoes"
+    },
+    {
+      "id": "island_pc_4",
+      "name": "PC Operacional 4",
+      "type": "pc",
+      "x": 127,
+      "y": 700,
+      "ip": "192.168.10.114",
+      "roomId": "room_operacoes"
+    },
+    {
+      "id": "island_pc_7",
+      "name": "PC Operacional 7",
+      "type": "pc",
+      "x": 423,
+      "y": 700,
+      "ip": "192.168.10.117",
+      "roomId": "room_operacoes"
+    },
+    {
+      "id": "island_pc_8",
+      "name": "PC Operacional 8",
+      "type": "pc",
+      "x": 423,
+      "y": 700,
+      "ip": "192.168.10.118",
+      "roomId": "room_operacoes"
+    },
+    {
+      "id": "dev_1787368861986",
+      "name": "Mesa de Reunião 1",
+      "type": "table",
+      "x": 505,
+      "y": 146,
+      "width": 140,
+      "height": 220,
+      "ip": "192.168.10.115",
+      "vlan": "VLAN 100",
+      "connectedTo": "patch_panel",
+      "roomId": "room_1787369529435_pc20",
+      "details": {
+        "status": "online",
+        "dualMonitor": true,
+        "voipPhone": true,
+        "vendor": "Genérico TI"
+      }
+    },
+    {
+      "id": "dev_1787369893448",
+      "name": "Mesa 1",
+      "type": "desk",
+      "x": 464,
+      "y": 278,
+      "width": 400,
+      "height": 60,
+      "ip": "192.168.10.112",
+      "vlan": "VLAN 100",
+      "connectedTo": "patch_panel",
+      "roomId": "room_1787368662780_hon4",
+      "details": {
+        "status": "online",
+        "dualMonitor": true,
+        "voipPhone": true,
+        "vendor": "Genérico TI"
+      }
+    },
+    {
+      "id": "dev_1787369965829",
+      "name": "Estação 1",
+      "type": "workstation",
+      "x": 604,
+      "y": 398,
+      "width": 104,
+      "height": 70,
+      "ip": "192.168.10.113",
+      "vlan": "VLAN 100",
+      "connectedTo": "patch_panel",
+      "roomId": "room_1787368662780_hon4",
+      "details": {
+        "status": "online",
+        "dualMonitor": true,
+        "voipPhone": true,
+        "vendor": "Genérico TI"
+      }
+    }
+  ],
+  "links": [],
+  "wings": [
+    {
+      "id": "wing_sala306",
+      "name": "SALA 306",
+      "code": "ALA-1",
+      "color": "#8b5cf6",
+      "description": "Unidade Principal - Sala 306",
+      "orderSequence": 1
+    }
+  ],
+  "stationStandards": [
+    {
+      "id": "std_dev",
+      "profileName": "Padrão Desenvolvedor / Senior",
+      "cpu": "Intel Core i7-13700K 16-Core",
+      "ram": "32 GB DDR5 5600MHz",
+      "storage": "1 TB NVMe Gen4 SSD",
+      "gpu": "Intel UHD Graphics 770",
+      "monitors": "Monitores Duplos 27\" 4K IPS (Dell U2723QE)",
+      "voipPhone": "Telefone IP Grandstream GXP2170 HD",
+      "os": "Windows 11 Pro Enterprise / WSL2",
+      "quantity": 6,
+      "roomId": "room_office",
+      "unitCost": 8500,
+      "accessoriesIncluded": "Headset Jabra USB-C, Teclado/Mouse Sem Fio Ergonomico"
+    },
+    {
+      "id": "std_exec",
+      "profileName": "Padrão Executivo (Laptop + Docking)",
+      "cpu": "Apple M3 Pro 12-Core CPU / 18-Core GPU",
+      "ram": "36 GB Unified Memory",
+      "storage": "512 GB NVMe SSD",
+      "gpu": "Apple Integrated 18-Core",
+      "monitors": "Monitores Duplos 27\" QHD Thunderbolt",
+      "voipPhone": "Headset Sem Fio Jabra Evolve2 65",
+      "os": "macOS Sonoma",
+      "quantity": 2,
+      "roomId": "room_office",
+      "unitCost": 16200,
+      "accessoriesIncluded": "Docking Station Thunderbolt 4 100W, Suporte de Alumínio"
+    },
+    {
+      "id": "std_callcenter",
+      "profileName": "Padrão Operacional / Atendimento",
+      "cpu": "Intel Core i5-13400 Micro",
+      "ram": "16 GB DDR4",
+      "storage": "512 GB SSD NVMe",
+      "gpu": "Intel Integrated",
+      "monitors": "Monitor Único 24\" FHD IPS",
+      "voipPhone": "Telefone IP Cisco CP-7821 VoIP",
+      "os": "Windows 11 Pro",
+      "quantity": 4,
+      "roomId": "room_office",
+      "unitCost": 4200,
+      "accessoriesIncluded": "Headset USB com Cancelamento de Ruído"
+    }
+  ],
+  "accessories": [
+    {
+      "id": "acc_1",
+      "name": "No-Break Smart-UPS 3000VA Senoidal",
+      "category": "Energia & UPS",
+      "brandModel": "APC por Schneider Electric (SMT3000R2X180)",
+      "quantity": 2,
+      "unitPrice": 12500,
+      "roomId": "room_dc",
+      "notes": "Instalado no Rack A e Rack B para autonomia de 30 min full load.",
+      "status": "installed"
+    },
+    {
+      "id": "acc_2",
+      "name": "Patch Panel 48 Portas CAT6 Gigalan",
+      "category": "Passivos & Patching",
+      "brandModel": "Furukawa Electric High Density",
+      "quantity": 4,
+      "unitPrice": 1100,
+      "roomId": "room_dc",
+      "notes": "Com guias traseiras e identificadores numéricos identificados.",
+      "status": "installed"
+    },
+    {
+      "id": "acc_3",
+      "name": "Eletrocalha Perfurada Galvanizada 200x50mm",
+      "category": "Infraestrutura & Dutos",
+      "brandModel": "Calhas Norte - Aço Z275 3 metros",
+      "quantity": 15,
+      "unitPrice": 180,
+      "roomId": "room_dc",
+      "notes": "Fixada no teto atravessando o corredor entre as duas salas.",
+      "status": "installed"
+    },
+    {
+      "id": "acc_4",
+      "name": "Ar Condicionado de Precisão Inverter 36k BTU",
+      "category": "Climatização",
+      "brandModel": "Vertiv Liebert CRV Inrow",
+      "quantity": 1,
+      "unitPrice": 28500,
+      "roomId": "room_dc",
+      "notes": "Mantém temperatura contínua em 19°C com controle de umidade.",
+      "status": "installed"
+    },
+    {
+      "id": "acc_5",
+      "name": "Transceiver SFP+ 10GBASE-SR Multimodo",
+      "category": "SFP & Fibra",
+      "brandModel": "Cisco SFP-10G-SR Compatible",
+      "quantity": 8,
+      "unitPrice": 350,
+      "roomId": "room_dc",
+      "notes": "Para uplinks entre Core Router, Main Switch e Racks.",
+      "status": "installed"
+    },
+    {
+      "id": "acc_6",
+      "name": "PDU Metrada de Rack 16A 12 Tomadas C13/C19",
+      "category": "Energia & UPS",
+      "brandModel": "APC AP7851 Rack PDU",
+      "quantity": 4,
+      "unitPrice": 1850,
+      "roomId": "room_dc",
+      "notes": "Monitoramento remoto via SNMP de corrente por fase.",
+      "status": "installed"
+    },
+    {
+      "id": "acc_7",
+      "name": "Patch Cords SFTP CAT6 Azul Blindado 1.5m",
+      "category": "Passivos & Patching",
+      "brandModel": "Furukawa Gigalan SFTP",
+      "quantity": 60,
+      "unitPrice": 28,
+      "roomId": "room_office",
+      "notes": "Cabeamento direto entre Patch Panel e Workstations.",
+      "status": "installed"
+    }
+  ]
+}

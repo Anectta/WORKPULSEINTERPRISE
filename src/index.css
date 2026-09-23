@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
+
+body {
+  background-color: #F8F9FA;
+  color: #1F2937;
+}
+
+@keyframes iconPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.85;
+  }
+}
+
+svg.lucide {
+  animation: iconPulse 2s ease-in-out infinite;
+  transform-origin: center;
+}
+
+/* Explicitly exclude Recharts charts and data visualization SVGs */
+.recharts-wrapper,
+.recharts-wrapper *,
+.recharts-surface,
+.recharts-dot {
+  animation: none !important;
+  transform: none !important;
+}

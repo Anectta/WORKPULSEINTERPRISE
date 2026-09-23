@@ -1,0 +1,6 @@
+{
+  "name": "WorkPulse Enterprise - Produtividade & LGPD",
+  "description": "Software corporativo de produtividade, compliance LGPD, Central CMDB de Configuração e Infraestrutura de TI, módulo nativo WIFI Pulse e módulo Security & Pentest com remediação, hardening, reteste, relatórios executivos, matriz de compliance e gestão estratégica de riscos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
