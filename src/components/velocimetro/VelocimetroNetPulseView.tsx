@@ -587,67 +587,31 @@ export const VelocimetroNetPulseView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Top Banner de Apresentação do Módulo */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800/60 font-mono tracking-wider">
-              TELEMETRIA DE REDE CORPORATIVA
-            </span>
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Anectta NetPulse v5.0</span>
-          </div>
-          <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-            Velocímetro Net Pulse
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium max-w-2xl">
-            Diagnóstico preciso de velocidade real e qualidade de tráfego. Meça latência (ping), jitter, download e upload multi-stream em tempo real.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <button
-            onClick={handleStartTest}
-            disabled={isTesting}
-            className="w-full md:w-auto px-5 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs flex items-center justify-center space-x-2 shadow-md shadow-blue-500/20 transition-all cursor-pointer disabled:opacity-50"
-          >
-            <Zap className={`w-4 h-4 ${isTesting ? 'animate-spin' : ''}`} />
-            <span>{isTesting ? 'MEDINDO TELEMETRIA...' : 'INICIAR TESTE DE VELOCIDADE'}</span>
-          </button>
-        </div>
+      {/* CABEÇALHO DO TESTE DE VELOCIDADE (ANECTTA NETPULSE - IMAGEM 1) */}
+      <div className="text-center max-w-4xl mx-auto pt-2 pb-4 px-4">
+        <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-950 dark:text-white">
+          <span>Anectta </span>
+          <span className="text-[#0284c7] dark:text-[#38bdf8]">NetPulse</span>
+        </h1>
+        <p className="text-xs sm:text-sm md:text-base text-slate-600 dark:text-slate-300 mt-3 max-w-3xl mx-auto leading-relaxed font-normal">
+          Meça com alta precisão a latência (ping), o jitter e a velocidade real de download e upload da sua conexão para saber se sua empresa está pronta para operações de TI remotas de alta performance:
+        </p>
       </div>
 
       {/* PAINEL CENTRAL DO VELOCÍMETRO COCKPIT */}
-      <div className={`bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 shadow-xs relative overflow-hidden ${isTesting ? 'speedtest-active' : ''}`}>
+      <div className={`bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xs relative overflow-hidden ${isTesting ? 'speedtest-active' : ''}`}>
         
-        {/* Stepper de Fases */}
-        <div className="flex items-center justify-center gap-2 mb-6 flex-wrap text-xs">
-          <div className={`px-3 py-1 rounded-full border text-xs font-mono font-semibold transition-all ${
-            state.phase === 'flow' || state.phase === 'ping'
-              ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-300 animate-pulse font-bold'
-              : state.phase === 'download' || state.phase === 'upload' || state.phase === 'finished'
-              ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border-emerald-300'
-              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
-          }`}>
-            1. Latência & Jitter
+        {/* Stepper de Fases (EXATAMENTE COMO NA IMAGEM 2) */}
+        <div className="flex items-center justify-center gap-2.5 sm:gap-3 mb-6 flex-wrap">
+          <div className="px-4 py-1.5 rounded-full border border-[#34d399] bg-[#ecfdf5] text-[#065f46] dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-600/60 font-mono text-xs font-semibold shadow-2xs">
+            1. Latência &amp; Jitter
           </div>
 
-          <div className={`px-3 py-1 rounded-full border text-xs font-mono font-semibold transition-all ${
-            state.phase === 'download'
-              ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-300 animate-pulse font-bold'
-              : state.phase === 'upload' || state.phase === 'finished'
-              ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border-emerald-300'
-              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
-          }`}>
+          <div className="px-4 py-1.5 rounded-full border border-[#34d399] bg-[#ecfdf5] text-[#065f46] dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-600/60 font-mono text-xs font-semibold shadow-2xs">
             2. Download
           </div>
 
-          <div className={`px-3 py-1 rounded-full border text-xs font-mono font-semibold transition-all ${
-            state.phase === 'upload'
-              ? 'bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-300 animate-pulse font-bold'
-              : state.phase === 'finished'
-              ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border-emerald-300'
-              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
-          }`}>
+          <div className="px-4 py-1.5 rounded-full border border-[#34d399] bg-[#ecfdf5] text-[#065f46] dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-600/60 font-mono text-xs font-semibold shadow-2xs">
             3. Upload
           </div>
         </div>

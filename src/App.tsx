@@ -680,7 +680,7 @@ export default function App() {
         {/* Tab Content Viewport */}
         <main className="flex-1 p-4 lg:p-6 overflow-y-auto">
           {/* Universal Page Header Card Banner */}
-          {activeTab !== 'asset_management' && activeTab !== 'cmdb' && (
+          {activeTab !== 'asset_management' && activeTab !== 'cmdb' && activeTab !== 'velocimetro_netpulse' && (
             <PageHeaderCard
               activeTab={activeTab}
               onPrimaryAction={handleTabPrimaryAction}
