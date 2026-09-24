@@ -2246,6 +2246,22 @@
   ],
   "tickets": [
     {
+      "id": "tkt-1790207147882",
+      "ticketNumber": "TKT-SEC-9804",
+      "tenantId": "tenant-demo",
+      "ciId": "ci-srv-erp",
+      "ciCode": "CI-SRV-01",
+      "ciName": "Servidor ERP",
+      "title": "[Segurança] Corrigir vulnerabilidade SEC-FND-00001 no OpenSSL Cryptographic Library",
+      "priority": "alta",
+      "status": "resolvido",
+      "requester": "Carlos Amorim (SecOps)",
+      "assignedTechnician": "Carlos Amorim",
+      "createdAt": "2026-09-23T23:45:47.882Z",
+      "slaLimit": "2026-09-25T23:45:47.882Z",
+      "slaBreached": false
+    },
+    {
       "id": "tkt-1790201749420",
       "ticketNumber": "TKT-SEC-6627",
       "tenantId": "tenant-demo",

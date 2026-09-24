@@ -3,7 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import type { Session } from '@supabase/supabase-js';
+import { onAuthStateChange, signOut as supabaseSignOut } from './services/supabase/auth.service';
+import { fetchEmployees, upsertEmployees, upsertEmployee, deleteEmployee } from './services/supabase/employees.service';
+import { fetchAppRules, upsertAppRules, upsertAppRule, deleteAppRule } from './services/supabase/appRules.service';
+import { fetchSiteBlocks, upsertSiteBlocks, upsertSiteBlock, deleteSiteBlock } from './services/supabase/siteBlocks.service';
+import { fetchAssets, upsertAssets, upsertAsset, deleteAsset } from './services/supabase/assets.service';
+import { LoginPage } from './components/auth/LoginPage';
 import { 
   Employee, 
   ActivityLog, 
@@ -71,6 +78,76 @@ function safeGetJson<T>(key: string, fallback: T): T {
 }
 
 export default function App() {
+  // =========================================================================
+  // SUPABASE AUTH — Session Guard
+  // =========================================================================
+  const [authSession, setAuthSession] = useState<Session | null | undefined>(undefined);
+  // undefined = loading, null = not logged in, Session = logged in
+
+  useEffect(() => {
+    // Subscribe to auth state changes (login/logout)
+    const { unsubscribe } = onAuthStateChange((session) => {
+      setAuthSession(session);
+    });
+    return unsubscribe;
+  }, []);
+
+  // =========================================================================
+  // SUPABASE DATA LOADING — Load from Supabase after login
+  // =========================================================================
+  const loadSupabaseData = useCallback(async () => {
+    try {
+      const [sbEmployees, sbAppRules, sbSiteBlocks, sbAssets] = await Promise.all([
+        fetchEmployees(),
+        fetchAppRules(),
+        fetchSiteBlocks(),
+        fetchAssets(),
+      ]);
+      if (sbEmployees.length > 0) {
+        setEmployees(sbEmployees);
+        localStorage.setItem('wp_employees', JSON.stringify(sbEmployees));
+      } else {
+        // Supabase table is empty — seed it with current localStorage/mock data
+        const localEmployees = safeGetJson('wp_employees', INITIAL_EMPLOYEES);
+        if (localEmployees.length > 0) {
+          await upsertEmployees(localEmployees);
+        }
+      }
+      if (sbAppRules.length > 0) {
+        setAppRules(sbAppRules);
+        localStorage.setItem('wp_appRules', JSON.stringify(sbAppRules));
+      } else {
+        const localRules = safeGetJson('wp_appRules', INITIAL_APP_RULES);
+        if (localRules.length > 0) await upsertAppRules(localRules);
+      }
+      if (sbSiteBlocks.length > 0) {
+        setSiteBlocks(sbSiteBlocks);
+        localStorage.setItem('wp_siteBlocks', JSON.stringify(sbSiteBlocks));
+      } else {
+        const localBlocks = safeGetJson('wp_siteBlocks', INITIAL_SITE_BLOCKS);
+        if (localBlocks.length > 0) await upsertSiteBlocks(localBlocks);
+      }
+      if (sbAssets.length > 0) {
+        setAssets(sbAssets);
+        localStorage.setItem('wp_assets', JSON.stringify(sbAssets));
+      } else {
+        const localAssets = safeGetJson('wp_assets', INITIAL_IT_ASSETS);
+        if (localAssets.length > 0) await upsertAssets(localAssets);
+      }
+      console.info('[WorkPulse] Supabase data loaded successfully.');
+    } catch (err) {
+      console.warn('[WorkPulse] Failed to load from Supabase, using localStorage fallback:', err);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Load Supabase data once when session becomes available
+  useEffect(() => {
+    if (authSession) {
+      loadSupabaseData();
+    }
+  }, [authSession, loadSupabaseData]);
+
   const [activeTab, setActiveTab] = useState<TabType>(() => {
     try {
       const saved = localStorage.getItem('wp_activeTab') as any;
@@ -82,6 +159,7 @@ export default function App() {
   });
 
   // Core Data State with localStorage Persistence
+
   const [employees, setEmployees] = useState<Employee[]>(() => safeGetJson('wp_employees', INITIAL_EMPLOYEES));
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>(INITIAL_ACTIVITY_LOGS);
   const [appRules, setAppRules] = useState<AppClassificationRule[]>(() => safeGetJson('wp_appRules', INITIAL_APP_RULES));
@@ -654,10 +732,34 @@ export default function App() {
     }
   };
 
+  // =========================================================================
+  // AUTH GUARD — Render login or loading before the main app
+  // =========================================================================
+
+  // Still resolving session from Supabase (brief flash)
+  if (authSession === undefined) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+            <Activity className="w-6 h-6 text-white animate-pulse" />
+          </div>
+          <p className="text-slate-400 text-sm">Verificando sessão...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // No session — show login page
+  if (authSession === null) {
+    return <LoginPage onLoginSuccess={() => {/* session update triggers via onAuthStateChange */}} />;
+  }
+
   return (
     <div className={`min-h-screen flex flex-col font-sans selection:bg-blue-600 selection:text-white transition-colors duration-200 ${
       isDarkMode ? 'dark bg-slate-950 text-slate-100' : 'bg-slate-100/70 text-slate-900'
     }`}>
+
       {/* Main Content Layout */}
       <div className="flex-1 max-w-[1700px] w-full mx-auto flex flex-col lg:flex-row min-h-0">
         {/* Sidebar with Integrated User Profile & System Status */}
@@ -675,6 +777,10 @@ export default function App() {
           onOpenIdleAlertsDrawer={() => setIsIdleDrawerOpen(true)}
           onOpenSilentAgentModal={() => setIsSilentAgentFleetModalOpen(true)}
           onOpenBackupModal={() => setIsBackupModalOpen(true)}
+          onSignOut={async () => {
+            await supabaseSignOut();
+            // onAuthStateChange will set authSession=null, triggering LoginPage
+          }}
         />
 
         {/* Tab Content Viewport */}

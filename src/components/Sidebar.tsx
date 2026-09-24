@@ -67,6 +67,7 @@ interface SidebarProps {
   onOpenIdleAlertsDrawer?: () => void;
   onOpenSilentAgentModal?: () => void;
   onOpenBackupModal?: () => void;
+  onSignOut?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -82,7 +83,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   idleAlertCount = 2,
   onOpenIdleAlertsDrawer,
   onOpenSilentAgentModal,
-  onOpenBackupModal
+  onOpenBackupModal,
+  onSignOut
 }) => {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
@@ -327,13 +329,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                         <button
                           onClick={() => {
-                            if (availableUsers[0]) setCurrentUser?.(availableUsers[0]);
                             setIsProfileDropdownOpen(false);
+                            if (onSignOut) {
+                              onSignOut();
+                            } else if (availableUsers[0]) {
+                              setCurrentUser?.(availableUsers[0]);
+                            }
                           }}
                           className="py-1.5 px-3 bg-red-950/60 hover:bg-red-900/60 text-red-300 font-bold rounded-xl text-center transition-colors flex items-center space-x-1 text-[11px] border border-red-800"
                         >
                           <LogOut className="w-3 h-3 text-red-400" />
-                          <span>Reiniciar</span>
+                          <span>Sair</span>
                         </button>
                       </div>
                     </div>
