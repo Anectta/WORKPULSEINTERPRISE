@@ -217,11 +217,11 @@ const itAssets = [
 
 // 6. Suppliers
 const suppliers = [
-  { id: 'sup-01', name: 'Dell Computers Brasil Ltda', cnpj: '72.381.189/0001-10', contact_name: 'Carlos Eduardo Mendes', email: 'enterprise_br@dell.com', phone: '+55 11 4004-0100', category: 'Hardware & Servidores', active: true },
-  { id: 'sup-02', name: 'Apple Corporate Brasil', cnpj: '00.623.904/0001-73', contact_name: 'Juliana Paes', email: 'business_latam@apple.com', phone: '+55 11 5503-0000', category: 'Notebooks & Mobile', active: true },
-  { id: 'sup-03', name: 'Lenovo Tecnologia Brasil', cnpj: '03.776.438/0001-52', contact_name: 'Roberto Fonseca', email: 'vendas_corp@lenovo.com', phone: '+55 11 3889-8000', category: 'Desktops & Workstations', active: true },
-  { id: 'sup-04', name: 'Cisco do Brasil Ltda', cnpj: '01.077.904/0001-40', contact_name: 'Fernando Souza', email: 'enterprise_networking@cisco.com', phone: '+55 11 5508-2000', category: 'Redes & Switches', active: true },
-  { id: 'sup-05', name: 'Fortinet do Brasil Informática', cnpj: '07.391.248/0001-90', contact_name: 'Mariana Costa', email: 'latam_security@fortinet.com', phone: '+55 11 3524-8800', category: 'Firewall & Cibersegurança', active: true }
+  { id: 'sup-01', name: 'Dell Computers Brasil Ltda', cnpj: '72.381.189/0001-10', contact_name: 'Carlos Eduardo Mendes', email: 'enterprise_br@dell.com', phone: '+55 11 4004-0100', category: 'Hardware & Servidores', rating: 5 },
+  { id: 'sup-02', name: 'Apple Corporate Brasil', cnpj: '00.623.904/0001-73', contact_name: 'Juliana Paes', email: 'business_latam@apple.com', phone: '+55 11 5503-0000', category: 'Notebooks & Mobile', rating: 5 },
+  { id: 'sup-03', name: 'Lenovo Tecnologia Brasil', cnpj: '03.776.438/0001-52', contact_name: 'Roberto Fonseca', email: 'vendas_corp@lenovo.com', phone: '+55 11 3889-8000', category: 'Desktops & Workstations', rating: 4 },
+  { id: 'sup-04', name: 'Cisco do Brasil Ltda', cnpj: '01.077.904/0001-40', contact_name: 'Fernando Souza', email: 'enterprise_networking@cisco.com', phone: '+55 11 5508-2000', category: 'Redes & Switches', rating: 5 },
+  { id: 'sup-05', name: 'Fortinet do Brasil Informática', cnpj: '07.391.248/0001-90', contact_name: 'Mariana Costa', email: 'latam_security@fortinet.com', phone: '+55 11 3524-8800', category: 'Firewall & Cibersegurança', rating: 5 }
 ];
 
 // Generate SQL
@@ -325,10 +325,10 @@ sql += `\nON CONFLICT (id) DO NOTHING;\n\n`;
 // 7. SEED: SUPPLIERS
 sql += `-- 7. SEED: SUPPLIERS (Fornecedores)
 INSERT INTO public.suppliers (
-    id, name, cnpj, contact_name, email, phone, category, active
+    id, name, cnpj, contact_name, email, phone, category, rating
 ) VALUES
 `;
-sql += suppliers.map(s => `    (${escapeSql(s.id)}, ${escapeSql(s.name)}, ${escapeSql(s.cnpj)}, ${escapeSql(s.contact_name)}, ${escapeSql(s.email)}, ${escapeSql(s.phone)}, ${escapeSql(s.category)}, ${escapeSql(s.active)})`).join(',\n');
+sql += suppliers.map(s => `    (${escapeSql(s.id)}, ${escapeSql(s.name)}, ${escapeSql(s.cnpj)}, ${escapeSql(s.contact_name)}, ${escapeSql(s.email)}, ${escapeSql(s.phone)}, ${escapeSql(s.category)}, ${s.rating})`).join(',\n');
 sql += `\nON CONFLICT (id) DO NOTHING;\n\n`;
 
 // 8. SEED: BACKUP DESTINATIONS (compatível com provider_type e base_uri)

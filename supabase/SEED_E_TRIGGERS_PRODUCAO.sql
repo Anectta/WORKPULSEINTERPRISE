@@ -115,13 +115,13 @@ ON CONFLICT (id) DO NOTHING;
 
 -- 7. SEED: SUPPLIERS (Fornecedores)
 INSERT INTO public.suppliers (
-    id, name, cnpj, contact_name, email, phone, category, active
+    id, name, cnpj, contact_name, email, phone, category, rating
 ) VALUES
-    ('sup-01', 'Dell Computers Brasil Ltda', '72.381.189/0001-10', 'Carlos Eduardo Mendes', 'enterprise_br@dell.com', '+55 11 4004-0100', 'Hardware & Servidores', true),
-    ('sup-02', 'Apple Corporate Brasil', '00.623.904/0001-73', 'Juliana Paes', 'business_latam@apple.com', '+55 11 5503-0000', 'Notebooks & Mobile', true),
-    ('sup-03', 'Lenovo Tecnologia Brasil', '03.776.438/0001-52', 'Roberto Fonseca', 'vendas_corp@lenovo.com', '+55 11 3889-8000', 'Desktops & Workstations', true),
-    ('sup-04', 'Cisco do Brasil Ltda', '01.077.904/0001-40', 'Fernando Souza', 'enterprise_networking@cisco.com', '+55 11 5508-2000', 'Redes & Switches', true),
-    ('sup-05', 'Fortinet do Brasil Informática', '07.391.248/0001-90', 'Mariana Costa', 'latam_security@fortinet.com', '+55 11 3524-8800', 'Firewall & Cibersegurança', true)
+    ('sup-01', 'Dell Computers Brasil Ltda', '72.381.189/0001-10', 'Carlos Eduardo Mendes', 'enterprise_br@dell.com', '+55 11 4004-0100', 'Hardware & Servidores', 5),
+    ('sup-02', 'Apple Corporate Brasil', '00.623.904/0001-73', 'Juliana Paes', 'business_latam@apple.com', '+55 11 5503-0000', 'Notebooks & Mobile', 5),
+    ('sup-03', 'Lenovo Tecnologia Brasil', '03.776.438/0001-52', 'Roberto Fonseca', 'vendas_corp@lenovo.com', '+55 11 3889-8000', 'Desktops & Workstations', 4),
+    ('sup-04', 'Cisco do Brasil Ltda', '01.077.904/0001-40', 'Fernando Souza', 'enterprise_networking@cisco.com', '+55 11 5508-2000', 'Redes & Switches', 5),
+    ('sup-05', 'Fortinet do Brasil Informática', '07.391.248/0001-90', 'Mariana Costa', 'latam_security@fortinet.com', '+55 11 3524-8800', 'Firewall & Cibersegurança', 5)
 ON CONFLICT (id) DO NOTHING;
 
 -- 8. SEED: BACKUP DESTINATIONS (Destinos de Backup)
