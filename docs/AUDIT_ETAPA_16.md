@@ -17,7 +17,7 @@
 | **Storage Local (Disco / DAS / SAN Montado)** | **PRODUCTION READY** | Aprovado (Atômico, Streaming, Zero Leak de Memória) |
 | **Storage SMB / CIFS (UNC / POSIX Mount)** | **PRODUCTION READY** | Aprovado (Depende de montagem no SO ou path UNC com permissão) |
 | **Storage S3 (AWS / MinIO / Ceph)** | **PRODUCTION READY** | Aprovado (Integrado com `@aws-sdk/client-s3` e `@aws-sdk/lib-storage`, streaming multipart real, copy server-side, checagem HeadBucket e suporte a endpoints customizados S3-compatible) |
-| **Storage SFTP** | **CONDITIONAL** | Implementado via bridge de path/chaves; requer biblioteca SSH2 para sessões SSH remotas nativas sem montagem POSIX |
+| **Storage SFTP** | **PRODUCTION READY** | Aprovado (Integrado com `ssh2` nativo, streaming remoto via SFTPWrapper, uploads atômicos com `.sftp_tmp`, listagem remota e autenticação por senha ou chave privada) |
 | **Agent Daemon (Linux systemd / Windows Service)** | **PRODUCTION READY** | Scripts de serviço validados com isolamento, autorestart e segurança |
 | **Desktop App (Tauri)** | **NOT EXECUTED** | Arquitetura e contratos definidos; compilação de crates Rust não executada neste ambiente web/sandbox |
 

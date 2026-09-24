@@ -241,6 +241,34 @@ export async function runStorageTestSuite() {
     await provider.close();
   });
 
+  // 5.1 Teste de Instanciação e Capacidades do SftpStorageProvider nativo SSH2
+  await runTest('SftpStorage: Instanciação Nativa SSH2 (ssh2.Client), configuração e matriz de capacidades', async () => {
+    const sftpProvider = new SftpStorageProvider(
+      {
+        type: StorageProviderType.SFTP,
+        host: 'backup-sftp.internal.corp',
+        port: 22,
+        remoteBasePath: '/var/storage/backups',
+        hostKeyPolicy: 'strict'
+      },
+      {
+        secretStore,
+        secretKeyRef: 'sftp_creds_test'
+      }
+    );
+
+    if (sftpProvider.isLocalSimulation()) {
+      throw new Error('Deveria estar em modo de rede SSH2 real');
+    }
+
+    const caps = sftpProvider.capabilities();
+    if (!caps.supportsDirectories || !caps.supportsAtomicRename || !caps.supportsResume) {
+      throw new Error('Capabilities do SftpStorageProvider incorretas');
+    }
+
+    await sftpProvider.close();
+  });
+
   // 6. Testes do S3StorageProvider (Multipart Upload, Metadata, Checksum e Rename Lógico)
   await runTest('S3Storage: Upload, Multipart Upload com Part ETags, Server-Side Copy + Delete e Bloqueio de Exclusão Perigosa', async () => {
     const provider = new S3StorageProvider(
