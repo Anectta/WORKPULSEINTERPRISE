@@ -777,4 +777,33 @@ export interface InventoryChangeRecord {
   metadata?: Record<string, any>;
 }
 
+export interface LiveDiscoveredDevice {
+  ip: string;
+  hostname: string;
+  mac: string;
+  vendor: string;
+  status: 'ONLINE' | 'OFFLINE';
+  responseTimeMs: number;
+  openPorts: number[];
+  services: { [port: number]: string };
+  deviceType: CIType;
+  hasSharedFolders: boolean;
+  hasRdp: boolean;
+  hasWeb: boolean;
+  hasSsh: boolean;
+  ttl?: number;
+  lastSeen: string;
+}
+
+export interface LiveScanResult {
+  scanId: string;
+  targetRange: string;
+  startedAt: string;
+  completedAt: string;
+  durationMs: number;
+  totalScanned: number;
+  totalOnline: number;
+  devices: LiveDiscoveredDevice[];
+}
+
 

@@ -43,6 +43,7 @@ import {
   DeviceInterface
 } from "../src/types/cmdb";
 import { InventoryDiffEngine } from "../src/utils/inventoryDiffEngine";
+import { NetworkScannerService } from "./networkScannerService";
 
 const router = Router();
 
@@ -3104,6 +3105,122 @@ router.get("/agent/devices/:agentId/changes", (req: Request, res: Response) => {
 // NETWORK DISCOVERY & PIPELINE DE HOMOLOGAÇÃO (PROMPT 7)
 // ICMP, ARP, SNMP, LLDP, CDP, DNS, DHCP, INTERFACES
 // =========================================================================
+
+// GET /api/v1/cmdb/discovery/interfaces - Detectar interfaces de rede locais e sugestões de sub-redes
+router.get("/cmdb/discovery/interfaces", (req: Request, res: Response) => {
+  try {
+    const interfaces = NetworkScannerService.getLocalNetworkInterfaces();
+    res.json({
+      success: true,
+      interfaces,
+      total: interfaces.length
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || "Erro ao detectar interfaces de rede locais." });
+  }
+});
+
+// POST /api/v1/cmdb/discovery/live-scan - Executar varredura de rede local em tempo real
+router.post("/cmdb/discovery/live-scan", async (req: Request, res: Response) => {
+  const tenantId = getTenantId(req);
+  const { targetRange, concurrency } = req.body;
+
+  if (!targetRange) {
+    return res.status(400).json({ error: "Faixa de rede (CIDR ou intervalo ex: 192.168.1.1-192.168.1.254) é obrigatória." });
+  }
+
+  try {
+    const result = await NetworkScannerService.executeLiveScan(targetRange, {
+      concurrency: concurrency ? Number(concurrency) : 25
+    });
+
+    // Mapeia e integra dispositivos descobertos com a base do CMDB
+    store.discoveredDevices = store.discoveredDevices || [];
+    for (const dev of result.devices) {
+      const existingIdx = store.discoveredDevices.findIndex(d => d.tenantId === tenantId && (d.ip === dev.ip || (dev.mac !== '00:00:00:00:00:00' && d.mac === dev.mac)));
+      const cmdbDevice: DiscoveredDevice = {
+        id: existingIdx >= 0 ? store.discoveredDevices[existingIdx].id : `dev-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+        tenantId,
+        hostname: dev.hostname,
+        ip: dev.ip,
+        mac: dev.mac,
+        vendor: dev.vendor,
+        detectedType: dev.deviceType as CIType,
+        openPorts: dev.openPorts,
+        protocolsDetected: ['ICMP', 'ARP', ...(dev.openPorts.includes(53) ? ['DNS' as const] : [])],
+        discoveredAt: existingIdx >= 0 ? store.discoveredDevices[existingIdx].discoveredAt : dev.lastSeen,
+        lastSeen: dev.lastSeen,
+        status: 'DISCOVERED',
+        pipelineStage: 'DISCOVERY'
+      };
+
+      if (existingIdx >= 0) {
+        store.discoveredDevices[existingIdx] = { ...store.discoveredDevices[existingIdx], ...cmdbDevice };
+      } else {
+        store.discoveredDevices.push(cmdbDevice);
+      }
+    }
+    saveStore(store);
+
+    logAuditEvent(
+      tenantId,
+      result.scanId,
+      targetRange,
+      `Varredura Live Scan (${result.totalOnline} hosts ativos)`,
+      "AUDITORIA",
+      `Varredura de rede ao vivo em ${targetRange} concluída. ${result.totalOnline} dispositivos online identificados em ${result.durationMs}ms.`,
+      "SecurityAdmin",
+      "live_network_scan",
+      "PENDENTE",
+      "CONCLUIDO",
+      "Web"
+    );
+
+    res.json({
+      success: true,
+      result,
+      message: `Varredura concluída com sucesso. ${result.totalOnline} dispositivos identificados na rede.`
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || "Erro na execução da varredura de rede." });
+  }
+});
+
+// POST /api/v1/cmdb/discovery/wol - Enviar Magic Packet Wake-on-LAN
+router.post("/cmdb/discovery/wol", async (req: Request, res: Response) => {
+  const tenantId = getTenantId(req);
+  const { mac, broadcastAddress, port } = req.body;
+
+  if (!mac) {
+    return res.status(400).json({ error: "Endereço MAC do dispositivo alvo é obrigatório para o Wake-on-LAN." });
+  }
+
+  try {
+    const wolResult = await NetworkScannerService.sendWakeOnLan(mac, broadcastAddress || '255.255.255.255', port ? Number(port) : 9);
+
+    logAuditEvent(
+      tenantId,
+      mac,
+      mac,
+      "Wake-on-LAN Target",
+      "AUDITORIA",
+      `Pacote Magic Packet Wake-on-LAN enviado para o host com MAC ${mac} via ${wolResult.broadcast}.`,
+      "SecurityAdmin",
+      "wake_on_lan",
+      "STANDBY",
+      "WOL_SENT",
+      "Web"
+    );
+
+    res.json({
+      success: true,
+      result: wolResult,
+      message: `Pacote de inicialização Wake-on-LAN transmitido para ${mac}.`
+    });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message || "Falha ao enviar pacote Wake-on-LAN." });
+  }
+});
 
 // GET /api/v1/cmdb/discovery/subnets - Listar redes autorizadas pelo administrador do tenant
 router.get("/cmdb/discovery/subnets", (req: Request, res: Response) => {

@@ -2246,6 +2246,22 @@
   ],
   "tickets": [
     {
+      "id": "tkt-1790217306336",
+      "ticketNumber": "TKT-SEC-6470",
+      "tenantId": "tenant-demo",
+      "ciId": "ci-srv-erp",
+      "ciCode": "CI-SRV-01",
+      "ciName": "Servidor ERP",
+      "title": "[Segurança] Corrigir vulnerabilidade SEC-FND-00001 no OpenSSL Cryptographic Library",
+      "priority": "alta",
+      "status": "resolvido",
+      "requester": "Carlos Amorim (SecOps)",
+      "assignedTechnician": "Carlos Amorim",
+      "createdAt": "2026-09-24T02:35:06.336Z",
+      "slaLimit": "2026-09-26T02:35:06.336Z",
+      "slaBreached": false
+    },
+    {
       "id": "tkt-1790215402564",
       "ticketNumber": "TKT-SEC-1956",
       "tenantId": "tenant-demo",
@@ -2780,6 +2796,36 @@
     }
   ],
   "history": [
+    {
+      "id": "audit-1790216869931-s1wcf",
+      "tenantId": "tenant-demo",
+      "ciId": "scan-muewwg9k-48tf",
+      "ciCode": "10.0.0.137",
+      "ciName": "Varredura Live Scan (1 hosts ativos)",
+      "date": "2026-09-24T02:27:49.931Z",
+      "action": "AUDITORIA",
+      "field": "live_network_scan",
+      "oldValue": "PENDENTE",
+      "newValue": "CONCLUIDO",
+      "description": "Varredura de rede ao vivo em 10.0.0.137 concluída. 1 dispositivos online identificados em 1484ms.",
+      "user": "SecurityAdmin",
+      "source": "Web"
+    },
+    {
+      "id": "audit-1790216845889-n36vm",
+      "tenantId": "tenant-demo",
+      "ciId": "scan-muewvxo8-8adx",
+      "ciCode": "10.0.0.135-10.0.0.140",
+      "ciName": "Varredura Live Scan (1 hosts ativos)",
+      "date": "2026-09-24T02:27:25.889Z",
+      "action": "AUDITORIA",
+      "field": "live_network_scan",
+      "oldValue": "PENDENTE",
+      "newValue": "CONCLUIDO",
+      "description": "Varredura de rede ao vivo em 10.0.0.135-10.0.0.140 concluída. 1 dispositivos online identificados em 1539ms.",
+      "user": "SecurityAdmin",
+      "source": "Web"
+    },
     {
       "id": "audit-1789078347491-k2hpi",
       "tenantId": "tenant-demo",
@@ -4730,6 +4776,27 @@
         "proof": "OUI Hikvision detectado via ARP e RTSP na porta 554",
         "verifiedAt": "2026-09-07T08:31:00.000Z"
       }
+    },
+    {
+      "id": "dev-muewvyuz-miol",
+      "tenantId": "tenant-demo",
+      "hostname": "Host-0-137",
+      "ip": "10.0.0.137",
+      "mac": "00:00:00:00:00:00",
+      "vendor": "Desconhecido",
+      "detectedType": "workstation",
+      "openPorts": [
+        139,
+        445
+      ],
+      "protocolsDetected": [
+        "ICMP",
+        "ARP"
+      ],
+      "discoveredAt": "2026-09-24T02:27:25.883Z",
+      "lastSeen": "2026-09-24T02:27:49.924Z",
+      "status": "DISCOVERED",
+      "pipelineStage": "DISCOVERY"
     }
   ]
 }

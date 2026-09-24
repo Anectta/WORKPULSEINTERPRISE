@@ -37,7 +37,8 @@ import {
   Radio,
   Printer,
   Router as RouterIcon,
-  HardDrive
+  HardDrive,
+  Zap
 } from 'lucide-react';
 import { 
   ConfigurationItem, 
@@ -48,6 +49,7 @@ import {
   DiscoveryProtocolMethod,
   DiscoveryPipelineStage
 } from '../../types/cmdb';
+import { LiveNetworkScannerTab } from './LiveNetworkScannerTab';
 
 interface CmdbDiscoveryViewProps {
   items: ConfigurationItem[];
@@ -67,7 +69,7 @@ export const CmdbDiscoveryView: React.FC<CmdbDiscoveryViewProps> = ({
   onImportHost
 }) => {
   // Tabs inside Discovery View
-  const [discoveryTab, setDiscoveryTab] = useState<'devices' | 'jobs' | 'subnets' | 'pipeline'>('devices');
+  const [discoveryTab, setDiscoveryTab] = useState<'live_scanner' | 'devices' | 'jobs' | 'subnets' | 'pipeline'>('live_scanner');
 
   // Subnets & Jobs state
   const [subnets, setSubnets] = useState<AuthorizedSubnet[]>([]);
@@ -682,7 +684,19 @@ export const CmdbDiscoveryView: React.FC<CmdbDiscoveryViewProps> = ({
 
       {/* 3. DISCOVERY SUB-NAVIGATION TABS */}
       <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setDiscoveryTab('live_scanner')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+              discoveryTab === 'live_scanner' 
+                ? 'bg-amber-500 text-slate-950 font-extrabold shadow-sm' 
+                : 'bg-slate-900 text-slate-300 hover:text-white border border-slate-800'
+            }`}
+          >
+            <Zap className="w-3.5 h-3.5 fill-current" />
+            <span>IP Scanner ao Vivo</span>
+          </button>
+
           <button
             onClick={() => setDiscoveryTab('devices')}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer flex items-center gap-2 ${
@@ -692,7 +706,7 @@ export const CmdbDiscoveryView: React.FC<CmdbDiscoveryViewProps> = ({
             }`}
           >
             <Radio className="w-3.5 h-3.5" />
-            <span>Dispositivos Descobertos ({devices.length})</span>
+            <span>Dispositivos Homologados ({devices.length})</span>
           </button>
 
           <button
@@ -749,6 +763,19 @@ export const CmdbDiscoveryView: React.FC<CmdbDiscoveryViewProps> = ({
           </div>
         )}
       </div>
+
+      {/* 3.5 TAB CONTENT: LIVE IP SCANNER */}
+      {discoveryTab === 'live_scanner' && (
+        <LiveNetworkScannerTab
+          currentTenant={currentTenant}
+          showToast={showToast}
+          onRefreshCis={onRefreshCis}
+          onPromoteDevice={(dev) => {
+            setSelectedDevice(dev);
+            setShowPromoteModal(dev);
+          }}
+        />
+      )}
 
       {/* 4. TAB CONTENT: DISCOVERED DEVICES TABLE */}
       {discoveryTab === 'devices' && (
