@@ -29,6 +29,34 @@ export async function signIn(email: string, password: string): Promise<{
   return { success: true, session: data.session, user: data.user };
 }
 
+export async function signUp(email: string, password: string, name?: string): Promise<{
+  success: boolean;
+  error?: string;
+  session?: Session | null;
+  user?: User | null;
+}> {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        name: name || email.split('@')[0],
+      }
+    }
+  });
+  if (error) {
+    console.error('[auth.service] signUp error:', error.message);
+    let friendlyMessage = 'Erro ao cadastrar usuário.';
+    if (error.message.includes('already registered')) {
+      friendlyMessage = 'Este e-mail já está cadastrado. Alterne para Entrar.';
+    } else if (error.message.includes('Password should be')) {
+      friendlyMessage = 'A senha deve ter no mínimo 6 caracteres.';
+    }
+    return { success: false, error: friendlyMessage };
+  }
+  return { success: true, session: data.session, user: data.user };
+}
+
 export async function signOut(): Promise<void> {
   await supabase.auth.signOut();
 }

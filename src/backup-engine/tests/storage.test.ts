@@ -307,6 +307,49 @@ export async function runStorageTestSuite() {
     await provider.close();
   });
 
+  // 6.5 Teste do S3StorageProvider com AWS SDK Oficial (@aws-sdk/client-s3)
+  await runTest('S3Storage: Instanciação Oficial AWS SDK (@aws-sdk/client-s3), endpoints customizados MinIO e ciclo de conexão', async () => {
+    const realSdkProvider = new S3StorageProvider(
+      {
+        type: StorageProviderType.S3,
+        bucket: 'workpulse-enterprise-cloud-vault',
+        region: 'sa-east-1',
+        endpoint: 'minio.corp.workpulse.com.br:9000',
+        forcePathStyle: true,
+        useSsl: true,
+        prefix: 'snapshots/primary'
+      },
+      {
+        secretStore,
+        secretKeyRef: 's3_creds_test',
+        mockSimulation: false // Força instanciação real do AWS S3Client
+      }
+    );
+
+    if (realSdkProvider.isMockSimulation()) {
+      throw new Error('Deveria estar em modo de produção real, não mock');
+    }
+
+    await realSdkProvider.initialize();
+
+    const client = realSdkProvider.getClient();
+    if (!client) {
+      throw new Error('S3Client oficial da AWS SDK não foi inicializado');
+    }
+
+    // Verifica capabilities
+    const caps = realSdkProvider.capabilities();
+    if (!caps.supportsMultipartUpload || !caps.supportsServerSideCopy) {
+      throw new Error('Capabilities do S3StorageProvider incorretas');
+    }
+
+    // Desconecta e valida cleanup do cliente
+    await realSdkProvider.close();
+    if (realSdkProvider.getClient() !== null) {
+      throw new Error('S3Client deveria ter sido destruído após close()');
+    }
+  });
+
   // 7. Testes da Factory e Registry
   await runTest('StorageProviderFactory: Resolução correta de instâncias baseada em BackupDestination', async () => {
     const destLocal: BackupDestination = {

@@ -19,7 +19,9 @@ import {
   Users,
   ChevronDown,
   ChevronUp,
-  Sparkles
+  Sparkles,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 interface IdleAlertsDrawerProps {
@@ -30,6 +32,8 @@ interface IdleAlertsDrawerProps {
   setThresholdMinutes: (mins: number) => void;
   isIdleAlertsEnabled: boolean;
   setIsIdleAlertsEnabled: (val: boolean) => void;
+  isFloatingVisible?: boolean;
+  onToggleFloatingVisible?: (val: boolean) => void;
   employees?: Employee[];
   individualAlertOverrides?: Record<string, boolean>;
   onToggleIndividualAlertOverride?: (employeeId: string) => void;
@@ -51,6 +55,8 @@ export const IdleAlertsDrawer: React.FC<IdleAlertsDrawerProps> = ({
   setThresholdMinutes,
   isIdleAlertsEnabled,
   setIsIdleAlertsEnabled,
+  isFloatingVisible,
+  onToggleFloatingVisible,
   employees = [],
   individualAlertOverrides = {},
   onToggleIndividualAlertOverride,
@@ -163,6 +169,32 @@ export const IdleAlertsDrawer: React.FC<IdleAlertsDrawerProps> = ({
                 </button>
               ))}
             </div>
+          </div>
+
+          <div className="flex items-center justify-between text-[11px] pt-1 border-t border-slate-200/60 dark:border-slate-800/60">
+            <span className="text-slate-500 dark:text-slate-400 font-medium">Popups na Tela:</span>
+            <button
+              type="button"
+              onClick={() => onToggleFloatingVisible?.(!isFloatingVisible)}
+              className={`px-2.5 py-1 rounded-lg font-bold border transition-all text-[10px] flex items-center space-x-1.5 cursor-pointer ${
+                isFloatingVisible
+                  ? 'bg-amber-500 text-slate-950 border-amber-600 shadow-xs'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'
+              }`}
+              title={isFloatingVisible ? 'Clique para ocultar os alertas flutuantes da tela' : 'Clique para exibir os alertas flutuantes na tela'}
+            >
+              {isFloatingVisible ? (
+                <>
+                  <Eye className="w-3 h-3 text-slate-950" />
+                  <span>Exibidos na Tela</span>
+                </>
+              ) : (
+                <>
+                  <EyeOff className="w-3 h-3 text-slate-400" />
+                  <span>Ocultos (Padrão)</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
 

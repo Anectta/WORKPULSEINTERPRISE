@@ -20,11 +20,16 @@ import {
   SlidersHorizontal,
   CheckCircle2,
   ChevronDown,
-  RotateCcw
+  RotateCcw,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 interface IdleToastNotificationsProps {
   toasts: IdleToast[];
+  isVisible?: boolean;
+  onToggleVisibility?: (visible: boolean) => void;
+  onOpenDrawer?: () => void;
   onDismiss: (id: string) => void;
   onInvestigate: (employeeId: string) => void;
   onNotifyEmployee: (toast: IdleToast) => void;
@@ -36,6 +41,9 @@ interface IdleToastNotificationsProps {
 
 export const IdleToastNotifications: React.FC<IdleToastNotificationsProps> = ({
   toasts,
+  isVisible,
+  onToggleVisibility,
+  onOpenDrawer,
   onDismiss,
   onInvestigate,
   onNotifyEmployee,
@@ -47,6 +55,15 @@ export const IdleToastNotifications: React.FC<IdleToastNotificationsProps> = ({
   // Sub-panel state for active expanded action (pausar or alterar)
   const [activePanel, setActivePanel] = useState<{ toastId: string; type: 'pausar' | 'alterar' } | null>(null);
   const [customThresholdInput, setCustomThresholdInput] = useState<string>('');
+  const [internalVisible, setInternalVisible] = useState<boolean>(false);
+
+  const isAlertsVisible = isVisible !== undefined ? isVisible : internalVisible;
+  const toggleVisibility = (val: boolean) => {
+    if (onToggleVisibility) {
+      onToggleVisibility(val);
+    }
+    setInternalVisible(val);
+  };
 
   // Show up to 3 floating toasts concurrently in the bottom-right corner
   const visibleToasts = toasts.slice(0, 3);
@@ -81,10 +98,89 @@ export const IdleToastNotifications: React.FC<IdleToastNotificationsProps> = ({
     setActivePanel(null);
   };
 
+  if (toasts.length === 0) return null;
+
   return (
-    <div className="fixed bottom-5 right-5 z-50 flex flex-col space-y-3 max-w-md w-full pointer-events-none px-2 sm:px-0">
-      <AnimatePresence>
-        {visibleToasts.map((toast) => {
+    <div className="fixed bottom-5 right-5 z-50 flex flex-col space-y-2.5 max-w-md w-full pointer-events-none px-2 sm:px-0">
+      <AnimatePresence mode="wait">
+        {!isAlertsVisible ? (
+          <motion.div
+            key="minimized-pill"
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9, y: 10 }}
+            transition={{ duration: 0.2 }}
+            className="pointer-events-auto self-end"
+          >
+            <button
+              onClick={() => toggleVisibility(true)}
+              className="group flex items-center space-x-3 bg-zinc-950/95 hover:bg-zinc-900 text-zinc-100 border border-amber-500/50 hover:border-amber-400 shadow-2xl shadow-black/80 px-4 py-2.5 rounded-full backdrop-blur-md transition-all hover:scale-105 cursor-pointer ring-1 ring-white/10"
+              title="Alertas de inatividade ocultos por padrão. Clique para exibir."
+            >
+              <div className="relative flex items-center justify-center">
+                <Bell className="w-4 h-4 text-amber-400 group-hover:rotate-12 transition-transform" />
+                <span className="absolute -top-1.5 -right-2 bg-rose-600 text-white text-[9px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center ring-2 ring-zinc-900 shadow">
+                  {toasts.length}
+                </span>
+              </div>
+
+              <div className="flex flex-col text-left">
+                <div className="flex items-center space-x-1.5">
+                  <span className="text-xs font-bold text-zinc-100 group-hover:text-amber-300 transition-colors">
+                    {toasts.length} {toasts.length === 1 ? 'Alerta' : 'Alertas'} de Inatividade
+                  </span>
+                </div>
+                <span className="text-[10px] text-zinc-400">
+                  Oculto por padrão • <span className="text-amber-400 font-semibold underline underline-offset-2">Clique para exibir</span>
+                </span>
+              </div>
+            </button>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="expanded-toast-container"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 15 }}
+            className="flex flex-col space-y-2.5 w-full pointer-events-none"
+          >
+            {/* Header Control Toolbar */}
+            <div className="pointer-events-auto flex items-center justify-between bg-zinc-950/95 border border-zinc-800 rounded-xl px-3.5 py-2 shadow-2xl backdrop-blur-md text-xs">
+              <div className="flex items-center space-x-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                </span>
+                <span className="font-bold text-white text-xs">
+                  Alertas em Tempo Real ({toasts.length})
+                </span>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                {onOpenDrawer && (
+                  <button
+                    onClick={onOpenDrawer}
+                    className="text-[11px] font-semibold text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 px-2 py-1 rounded transition-colors cursor-pointer"
+                    title="Abrir Central de Notificações completa"
+                  >
+                    Histórico
+                  </button>
+                )}
+                <button
+                  onClick={() => toggleVisibility(false)}
+                  className="flex items-center space-x-1 text-zinc-300 hover:text-white bg-zinc-800/90 hover:bg-zinc-700 border border-zinc-700 px-2.5 py-1 rounded-md text-[11px] font-bold transition-all shadow-xs cursor-pointer"
+                  title="Ocultar alertas da tela"
+                >
+                  <EyeOff className="w-3.5 h-3.5 text-zinc-400" />
+                  <span>Ocultar</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Floating Cards */}
+            <div className="flex flex-col space-y-3 pointer-events-none">
+              <AnimatePresence>
+                {visibleToasts.map((toast) => {
           const isCritical = toast.severity === 'critico' || toast.idleMinutes >= 30;
           const count = toast.occurrenceCount || 1;
           const isGrouped = count > 1 || toast.isGrouped;
@@ -360,6 +456,10 @@ export const IdleToastNotifications: React.FC<IdleToastNotificationsProps> = ({
             </motion.div>
           );
         })}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );

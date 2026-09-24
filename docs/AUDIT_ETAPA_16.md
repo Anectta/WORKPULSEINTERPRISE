@@ -16,7 +16,7 @@
 | **Backup Engine (Core, Crypto, Catalog, Restore, Retention)** | **PRODUCTION READY** | Aprovado (AES-256-GCM, Zstandard, GFS, Streaming, Resiliência) |
 | **Storage Local (Disco / DAS / SAN Montado)** | **PRODUCTION READY** | Aprovado (Atômico, Streaming, Zero Leak de Memória) |
 | **Storage SMB / CIFS (UNC / POSIX Mount)** | **PRODUCTION READY** | Aprovado (Depende de montagem no SO ou path UNC com permissão) |
-| **Storage S3 (AWS / MinIO / Ceph)** | **CONDITIONAL** | O provider atual possui implementação de semântica S3/ETags/Multipart em buffer in-process; requer adapter HTTP/SDK AWS para buckets remotos |
+| **Storage S3 (AWS / MinIO / Ceph)** | **PRODUCTION READY** | Aprovado (Integrado com `@aws-sdk/client-s3` e `@aws-sdk/lib-storage`, streaming multipart real, copy server-side, checagem HeadBucket e suporte a endpoints customizados S3-compatible) |
 | **Storage SFTP** | **CONDITIONAL** | Implementado via bridge de path/chaves; requer biblioteca SSH2 para sessões SSH remotas nativas sem montagem POSIX |
 | **Agent Daemon (Linux systemd / Windows Service)** | **PRODUCTION READY** | Scripts de serviço validados com isolamento, autorestart e segurança |
 | **Desktop App (Tauri)** | **NOT EXECUTED** | Arquitetura e contratos definidos; compilação de crates Rust não executada neste ambiente web/sandbox |

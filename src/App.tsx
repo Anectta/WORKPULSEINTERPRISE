@@ -226,33 +226,11 @@ export default function App() {
   };
 
   const [idleToasts, setIdleToasts] = useState<IdleToast[]>(() => {
-    return safeGetJson('wp_idleToasts', [
-      {
-        id: 'toast-init-1',
-        employeeId: 'emp-104',
-        employeeName: 'Lucas Gabriel Rocha',
-        employeeAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
-        role: 'Analista de Suporte N2',
-        department: 'Atendimento & Suporte',
-        workModel: 'Home Office',
-        computerHost: 'SUP-WIN10-099',
-        idleMinutes: 18,
-        thresholdMinutes: 15,
-        lastApp: 'Google Chrome (youtube.com)',
-        timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-        severity: 'alerta',
-        createdTimeMs: Date.now() - 2 * 60 * 1000,
-        lastUpdatedMs: Date.now() - 2 * 60 * 1000,
-        occurrenceCount: 1,
-        isGrouped: false,
-        eventsHistory: [{
-          timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-          idleMinutes: 18,
-          lastApp: 'Google Chrome (youtube.com)'
-        }]
-      }
-    ]);
+    return safeGetJson('wp_idleToasts', []);
   });
+
+  // Floating notifications visibility: always hidden by default on app launch
+  const [isFloatingAlertsVisible, setIsFloatingAlertsVisible] = useState<boolean>(false);
 
   // System Users State with localStorage Persistence
   const [systemUsers, setSystemUsers] = useState<CurrentUser[]>(() => {
@@ -611,6 +589,7 @@ export default function App() {
     // Pick an employee (or Lucas Rocha or a random active one)
     const target = employees.find(e => e.status === 'Ocioso') || employees[0];
     triggerIdleToastForEmployee(target, idleThresholdMinutes + 8);
+    setIsFloatingAlertsVisible(true);
   };
 
   // Other Handlers
@@ -955,6 +934,9 @@ export default function App() {
       {/* Floating Toast Notifications */}
       <IdleToastNotifications
         toasts={idleToasts}
+        isVisible={isFloatingAlertsVisible}
+        onToggleVisibility={setIsFloatingAlertsVisible}
+        onOpenDrawer={() => setIsIdleDrawerOpen(true)}
         onDismiss={handleDismissToast}
         onInvestigate={handleInvestigateEmployee}
         onNotifyEmployee={handleNotifyEmployee}
@@ -993,6 +975,8 @@ export default function App() {
         setThresholdMinutes={setIdleThresholdMinutes}
         isIdleAlertsEnabled={isIdleAlertsEnabled}
         setIsIdleAlertsEnabled={setIsIdleAlertsEnabled}
+        isFloatingVisible={isFloatingAlertsVisible}
+        onToggleFloatingVisible={setIsFloatingAlertsVisible}
         employees={employees}
         individualAlertOverrides={individualAlertOverrides}
         onToggleIndividualAlertOverride={handleToggleIndividualAlertOverride}
