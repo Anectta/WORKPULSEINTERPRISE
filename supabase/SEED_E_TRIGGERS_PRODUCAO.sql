@@ -49,18 +49,18 @@ INSERT INTO public.employees (
     computer_host, ip_address, current_app, current_domain, productivity_score,
     worked_hours_today, productive_hours_today, unproductive_hours_today,
     neutral_hours_today, idle_hours_today, schedule_start, schedule_end,
-    punch_in_time, overtime_minutes, pc_lock_enabled, pc_lock_status, agent_version
+    punch_in_time, punch_out_time, overtime_minutes, pc_lock_enabled, pc_lock_status, agent_version
 ) VALUES
-    ('emp-101', 'Ana Beatris Silva', 'ana.silva@workpulse.com.br', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150', 'Desenvolvedora Full Stack Sr.', 'Engenharia', 'Home Office', 'Ativo', 'DEV-WIN11-042', '189.122.45.102', 'Visual Studio Code', 'github.com', 92, 7.2, 6.6, 0.2, 0.4, 0.2, '08:00', '17:00', '07:55', 0, true, 'Desbloqueado', '4.2.1-lts'),
-    ('emp-102', 'Carlos Eduardo Mendes', 'carlos.mendes@workpulse.com.br', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150', 'Executivo de Vendas Enterprise', 'Vendas', 'Híbrido', 'Ativo', 'SALES-MAC-018', '177.89.210.14', 'Salesforce CRM', 'salesforce.com', 88, 6.8, 5.9, 0.5, 0.4, 0.3, '08:30', '17:30', '08:28', 15, true, 'Desbloqueado', '4.2.1-lts'),
-    ('emp-103', 'Mariana Costa Oliveira', 'mariana.costa@workpulse.com.br', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150', 'Especialista em DHO & People Analytics', 'RH & Pessoas', 'Presencial', 'Ativo', 'RH-WIN11-005', '10.0.4.15', 'TOTVS Carol HCM', 'totvs.com.br', 85, 7, 5.8, 0.4, 0.8, 0.2, '08:00', '17:00', '08:02', 0, false, 'Desbloqueado', '4.2.1-lts'),
-    ('emp-104', 'Lucas Gabriel Rocha', 'lucas.rocha@workpulse.com.br', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150', 'Analista de Suporte N2', 'Atendimento & Suporte', 'Home Office', 'Ocioso', 'SUP-WIN10-099', '201.55.12.88', 'Google Chrome', 'youtube.com', 54, 5.1, 2.8, 1.8, 0.5, 0.9, '09:00', '18:00', '09:15', 0, true, 'Bloqueado (Ociosidade)', '4.2.0'),
-    ('emp-105', 'Juliana Fernandes Lima', 'juliana.lima@workpulse.com.br', 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150', 'Coordenadora de Marketing Digital', 'Marketing', 'Presencial', 'Ativo', 'MKT-MAC-003', '10.0.6.22', 'Canva Pro', 'canva.com', 91, 7.5, 6.8, 0.3, 0.4, 0.1, '08:30', '17:30', '08:25', 0, false, 'Desbloqueado', '4.2.1-lts'),
-    ('emp-106', 'Fernando Henrique Souza', 'fernando.souza@workpulse.com.br', 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150', 'Engenheiro de DevOps & Cloud', 'Engenharia', 'Home Office', 'Ativo', 'DEV-LINUX-012', '179.184.22.41', 'Terminal / Docker CLI', 'aws.amazon.com', 95, 8, 7.6, 0.1, 0.3, 0.1, '08:00', '17:00', '07:50', 60, true, 'Desbloqueado', '4.2.1-lts'),
-    ('emp-107', 'Beatriz Martins Castro', 'beatriz.castro@workpulse.com.br', 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150', 'Supervisora de Customer Success', 'Atendimento & Suporte', 'Presencial', 'Ativo', 'CS-WIN11-008', '10.0.4.55', 'Zendesk Support', 'zendesk.com', 87, 6.9, 6, 0.4, 0.5, 0.2, '08:00', '17:00', '08:00', 0, false, 'Desbloqueado', '4.2.1-lts'),
-    ('emp-108', 'Rodrigo Silveira Dias', 'rodrigo.dias@workpulse.com.br', 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150', 'Analista Financeiro Pleno', 'Financeiro & Jurídico', 'Híbrido', 'Ativo', 'FIN-WIN11-002', '10.0.8.10', 'SAP S/4HANA', 'sap.corp', 93, 7.4, 6.9, 0.1, 0.4, 0.1, '09:00', '18:00', '08:58', 0, true, 'Desbloqueado', '4.2.1-lts'),
-    ('emp-109', 'Camila Rossi Ferreira', 'camila.ferreira@workpulse.com.br', 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150', 'Product Designer Lead', 'Engenharia', 'Home Office', 'Ausente', 'DES-MAC-004', '186.211.90.15', 'Figma', 'figma.com', 79, 4.8, 3.8, 0.4, 0.6, 0.8, '08:30', '17:30', '08:35', 0, true, 'Desbloqueado', '4.2.1-lts'),
-    ('emp-110', 'Thiago Alves Peixoto', 'thiago.peixoto@workpulse.com.br', 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150', 'SDR - Prospecção Ativa', 'Vendas', 'Presencial', 'Estação Bloqueada', 'SDR-WIN10-019', '10.0.5.101', 'Bloqueio Corporativo', 'workpulse.local', 41, 3.2, 1.3, 1.5, 0.4, 0.8, '09:00', '18:00', '09:05', 0, true, 'Bloqueado (Horário de Almoço)', '4.1.9')
+    ('emp-101', 'Ana Beatris Silva', 'ana.silva@workpulse.com.br', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150', 'Desenvolvedora Full Stack Sr.', 'Engenharia', 'Home Office', 'Ativo', 'DEV-WIN11-042', '189.122.45.102', 'Visual Studio Code', 'github.com', 92, 7.2, 6.6, 0.2, 0.4, 0.2, '08:00', '17:00', '07:55', NULL, 0, true, 'Desbloqueado', '4.2.1-lts'),
+    ('emp-102', 'Carlos Eduardo Mendes', 'carlos.mendes@workpulse.com.br', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150', 'Executivo de Vendas Enterprise', 'Vendas', 'Híbrido', 'Ativo', 'SALES-MAC-018', '177.89.210.14', 'Salesforce CRM', 'salesforce.com', 88, 6.8, 5.9, 0.5, 0.4, 0.3, '08:30', '17:30', '08:28', NULL, 15, true, 'Desbloqueado', '4.2.1-lts'),
+    ('emp-103', 'Mariana Costa Oliveira', 'mariana.costa@workpulse.com.br', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150', 'Especialista em DHO & People Analytics', 'RH & Pessoas', 'Presencial', 'Ativo', 'RH-WIN11-005', '10.0.4.15', 'TOTVS Carol HCM', 'totvs.com.br', 85, 7, 5.8, 0.4, 0.8, 0.2, '08:00', '17:00', '08:02', NULL, 0, false, 'Desbloqueado', '4.2.1-lts'),
+    ('emp-104', 'Lucas Gabriel Rocha', 'lucas.rocha@workpulse.com.br', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150', 'Analista de Suporte N2', 'Atendimento & Suporte', 'Home Office', 'Ocioso', 'SUP-WIN10-099', '201.55.12.88', 'Google Chrome', 'youtube.com', 54, 5.1, 2.8, 1.8, 0.5, 0.9, '09:00', '18:00', '09:15', NULL, 0, true, 'Bloqueado (Ociosidade)', '4.2.0'),
+    ('emp-105', 'Juliana Fernandes Lima', 'juliana.lima@workpulse.com.br', 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150', 'Coordenadora de Marketing Digital', 'Marketing', 'Presencial', 'Ativo', 'MKT-MAC-003', '10.0.6.22', 'Canva Pro', 'canva.com', 91, 7.5, 6.8, 0.3, 0.4, 0.1, '08:30', '17:30', '08:25', NULL, 0, false, 'Desbloqueado', '4.2.1-lts'),
+    ('emp-106', 'Fernando Henrique Souza', 'fernando.souza@workpulse.com.br', 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150', 'Engenheiro de DevOps & Cloud', 'Engenharia', 'Home Office', 'Ativo', 'DEV-LINUX-012', '179.184.22.41', 'Terminal / Docker CLI', 'aws.amazon.com', 95, 8, 7.6, 0.1, 0.3, 0.1, '08:00', '17:00', '07:50', NULL, 60, true, 'Desbloqueado', '4.2.1-lts'),
+    ('emp-107', 'Beatriz Martins Castro', 'beatriz.castro@workpulse.com.br', 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150', 'Supervisora de Customer Success', 'Atendimento & Suporte', 'Presencial', 'Ativo', 'CS-WIN11-008', '10.0.4.55', 'Zendesk Support', 'zendesk.com', 87, 6.9, 6, 0.4, 0.5, 0.2, '08:00', '17:00', '08:00', NULL, 0, false, 'Desbloqueado', '4.2.1-lts'),
+    ('emp-108', 'Rodrigo Silveira Dias', 'rodrigo.dias@workpulse.com.br', 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150', 'Analista Financeiro Pleno', 'Financeiro & Jurídico', 'Híbrido', 'Ativo', 'FIN-WIN11-002', '10.0.8.10', 'SAP S/4HANA', 'sap.corp', 93, 7.4, 6.9, 0.1, 0.4, 0.1, '09:00', '18:00', '08:58', NULL, 0, true, 'Desbloqueado', '4.2.1-lts'),
+    ('emp-109', 'Camila Rossi Ferreira', 'camila.ferreira@workpulse.com.br', 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150', 'Product Designer Lead', 'Engenharia', 'Home Office', 'Ausente', 'DES-MAC-004', '186.211.90.15', 'Figma', 'figma.com', 79, 4.8, 3.8, 0.4, 0.6, 0.8, '08:30', '17:30', '08:35', NULL, 0, true, 'Desbloqueado', '4.2.1-lts'),
+    ('emp-110', 'Thiago Alves Peixoto', 'thiago.peixoto@workpulse.com.br', 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150', 'SDR - Prospecção Ativa', 'Vendas', 'Presencial', 'Estação Bloqueada', 'SDR-WIN10-019', '10.0.5.101', 'Bloqueio Corporativo', 'workpulse.local', 41, 3.2, 1.3, 1.5, 0.4, 0.8, '09:00', '18:00', '09:05', NULL, 0, true, 'Bloqueado (Horário de Almoço)', '4.1.9')
 ON CONFLICT (id) DO NOTHING;
 
 -- 3. SEED: APP CLASSIFICATION RULES
@@ -79,14 +79,14 @@ INSERT INTO public.app_classification_rules (
     ('rule-10', 'Steam Client', 'steam.exe', 'steampowered.com', 'Improdutivo', 'Jogos & Lazer', 'Geral', 'Plataforma de jogos terminantemente vetada em PCs corporativos', false)
 ON CONFLICT (id) DO NOTHING;
 
--- 4. SEED: SITE BLOCK RULES
+-- 4. SEED: SITE BLOCK RULES (Colunas JSONB)
 INSERT INTO public.site_block_rules (
     id, title, category_group, domain_pattern, blocked_departments, work_models, action, active
 ) VALUES
-    ('blk-01', 'Bloqueio de Sites de Apostas & Cassinos', 'Jogos & Apostas', '*bet365.com;*blaze.com;*sportingbet.com;*betano.com', ARRAY['Geral']::TEXT[], ARRAY['Presencial', 'Híbrido', 'Home Office']::TEXT[], 'Bloqueio Total', true),
-    ('blk-02', 'Restrição de Redes Sociais em Horário Central', 'Redes Sociais', '*tiktok.com;*instagram.com;*facebook.com;*x.com', ARRAY['Atendimento & Suporte', 'Vendas', 'Financeiro & Jurídico']::TEXT[], ARRAY['Presencial', 'Híbrido']::TEXT[], 'Aviso com Justificativa', true),
-    ('blk-03', 'Prevenção de Vazamento via Webtorrent & P2P', 'Segurança & Vazamento', '*torrent*;*thepiratebay.*;*1337x.*;*megaupload.*', ARRAY['Geral']::TEXT[], ARRAY['Presencial', 'Híbrido', 'Home Office']::TEXT[], 'Bloqueio Total', true),
-    ('blk-04', 'Bloqueio de Streaming em Conexão Corporativa', 'Consumo de Banda', '*netflix.com;*primevideo.com;*disneyplus.com', ARRAY['Geral']::TEXT[], ARRAY['Presencial']::TEXT[], 'Alerta ao Gestor', false)
+    ('blk-01', 'Bloqueio de Sites de Apostas & Cassinos', 'Jogos & Apostas', '*bet365.com;*blaze.com;*sportingbet.com;*betano.com', '["Geral"]'::jsonb, '["Presencial","Híbrido","Home Office"]'::jsonb, 'Bloqueio Total', true),
+    ('blk-02', 'Restrição de Redes Sociais em Horário Central', 'Redes Sociais', '*tiktok.com;*instagram.com;*facebook.com;*x.com', '["Atendimento & Suporte","Vendas","Financeiro & Jurídico"]'::jsonb, '["Presencial","Híbrido"]'::jsonb, 'Aviso com Justificativa', true),
+    ('blk-03', 'Prevenção de Vazamento via Webtorrent & P2P', 'Segurança & Vazamento', '*torrent*;*thepiratebay.*;*1337x.*;*megaupload.*', '["Geral"]'::jsonb, '["Presencial","Híbrido","Home Office"]'::jsonb, 'Bloqueio Total', true),
+    ('blk-04', 'Bloqueio de Streaming em Conexão Corporativa', 'Consumo de Banda', '*netflix.com;*primevideo.com;*disneyplus.com', '["Geral"]'::jsonb, '["Presencial"]'::jsonb, 'Alerta ao Gestor', false)
 ON CONFLICT (id) DO NOTHING;
 
 -- 5. SEED: PC LOCK POLICIES (Colunas oficiais da tabela)
@@ -124,17 +124,17 @@ INSERT INTO public.suppliers (
     ('sup-05', 'Fortinet do Brasil Informática', '07.391.248/0001-90', 'Mariana Costa', 'latam_security@fortinet.com', '+55 11 3524-8800', 'Firewall & Cibersegurança', true)
 ON CONFLICT (id) DO NOTHING;
 
--- 8. SEED: BACKUP DESTINATIONS (Destinos de Backup Padrão)
+-- 8. SEED: BACKUP DESTINATIONS (Destinos de Backup)
 INSERT INTO public.backup_destinations (
-    id, tenant_id, name, type, endpoint, bucket_or_path, is_default, is_active
+    id, tenant_id, name, provider_type, base_uri, config, is_active
 ) VALUES
-    ('dst-local-01', 'tenant-default', 'Storage Local Primário (NAS Synology RS3621)', 'LOCAL', '/mnt/workpulse_storage/primary', '/backups', true, true),
-    ('dst-s3-01', 'tenant-default', 'Nuvem AWS S3 Seguro (Glacier Instant Retrieval)', 'S3', 'https://s3.sa-east-1.amazonaws.com', 'workpulse-enterprise-cold-vault', false, true)
+    ('dst-local-01', 'tenant-default', 'Storage Local Primário (NAS Synology RS3621)', 'LOCAL', '/mnt/workpulse_storage/primary/backups', '{}'::jsonb, true),
+    ('dst-s3-01', 'tenant-default', 'Nuvem AWS S3 Seguro (Glacier Instant Retrieval)', 'S3', 's3://workpulse-enterprise-cold-vault', '{"region": "sa-east-1"}'::jsonb, true)
 ON CONFLICT (id) DO NOTHING;
 
-// 9. SEED: BACKUP JOBS
+-- 9. SEED: BACKUP JOBS (compatível com source_config e policy_config)
 INSERT INTO public.backup_jobs (
-    id, tenant_id, name, source_paths, destination_id, schedule_cron, strategy, compression_algorithm, encryption_algorithm, retention_daily, retention_weekly, retention_monthly, is_active
+    id, tenant_id, name, job_type, priority, source_config, destination_id, policy_config, schedule_cron, status, is_paused
 ) VALUES
-    ('job-daily-01', 'tenant-default', 'Backup Diário Contínuo de Estações e Dados Críticos', ARRAY['/home', '/var/data', 'C:\\WorkPulse\\Data']::TEXT[], 'dst-local-01', '0 2 * * *', 'INCREMENTAL', 'ZSTD', 'AES-256-GCM', 7, 4, 12, true)
+    ('job-daily-01', 'tenant-default', 'Backup Diário Contínuo de Estações e Dados Críticos', 'INCREMENTAL', 1, '{"paths": ["/home", "/var/data", "C:\\WorkPulse\\Data"]}'::jsonb, 'dst-local-01', '{"retentionDaily": 7, "retentionWeekly": 4, "retentionMonthly": 12}'::jsonb, '0 2 * * *', 'PENDING', false)
 ON CONFLICT (id) DO NOTHING;

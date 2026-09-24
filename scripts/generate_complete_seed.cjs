@@ -5,11 +5,7 @@ function escapeSql(val) {
   if (val === null || val === undefined) return 'NULL';
   if (typeof val === 'number') return String(val);
   if (typeof val === 'boolean') return val ? 'true' : 'false';
-  if (Array.isArray(val)) {
-    const escapedItems = val.map(item => `'${String(item).replace(/'/g, "''")}'`).join(', ');
-    return `ARRAY[${escapedItems}]::TEXT[]`;
-  }
-  if (typeof val === 'object') {
+  if (Array.isArray(val) || typeof val === 'object') {
     return `'${JSON.stringify(val).replace(/'/g, "''")}'::jsonb`;
   }
   return `'${String(val).replace(/'/g, "''")}'`;
@@ -24,7 +20,7 @@ const employees = [
     computer_host: 'DEV-WIN11-042', ip_address: '189.122.45.102', current_app: 'Visual Studio Code', current_domain: 'github.com',
     productivity_score: 92, worked_hours_today: 7.2, productive_hours_today: 6.6, unproductive_hours_today: 0.2,
     neutral_hours_today: 0.4, idle_hours_today: 0.2, schedule_start: '08:00', schedule_end: '17:00',
-    punch_in_time: '07:55', overtime_minutes: 0, pc_lock_enabled: true, pc_lock_status: 'Desbloqueado', agent_version: '4.2.1-lts'
+    punch_in_time: '07:55', punch_out_time: null, overtime_minutes: 0, pc_lock_enabled: true, pc_lock_status: 'Desbloqueado', agent_version: '4.2.1-lts'
   },
   {
     id: 'emp-102', name: 'Carlos Eduardo Mendes', email: 'carlos.mendes@workpulse.com.br',
@@ -33,7 +29,7 @@ const employees = [
     computer_host: 'SALES-MAC-018', ip_address: '177.89.210.14', current_app: 'Salesforce CRM', current_domain: 'salesforce.com',
     productivity_score: 88, worked_hours_today: 6.8, productive_hours_today: 5.9, unproductive_hours_today: 0.5,
     neutral_hours_today: 0.4, idle_hours_today: 0.3, schedule_start: '08:30', schedule_end: '17:30',
-    punch_in_time: '08:28', overtime_minutes: 15, pc_lock_enabled: true, pc_lock_status: 'Desbloqueado', agent_version: '4.2.1-lts'
+    punch_in_time: '08:28', punch_out_time: null, overtime_minutes: 15, pc_lock_enabled: true, pc_lock_status: 'Desbloqueado', agent_version: '4.2.1-lts'
   },
   {
     id: 'emp-103', name: 'Mariana Costa Oliveira', email: 'mariana.costa@workpulse.com.br',
@@ -42,7 +38,7 @@ const employees = [
     computer_host: 'RH-WIN11-005', ip_address: '10.0.4.15', current_app: 'TOTVS Carol HCM', current_domain: 'totvs.com.br',
     productivity_score: 85, worked_hours_today: 7.0, productive_hours_today: 5.8, unproductive_hours_today: 0.4,
     neutral_hours_today: 0.8, idle_hours_today: 0.2, schedule_start: '08:00', schedule_end: '17:00',
-    punch_in_time: '08:02', overtime_minutes: 0, pc_lock_enabled: false, pc_lock_status: 'Desbloqueado', agent_version: '4.2.1-lts'
+    punch_in_time: '08:02', punch_out_time: null, overtime_minutes: 0, pc_lock_enabled: false, pc_lock_status: 'Desbloqueado', agent_version: '4.2.1-lts'
   },
   {
     id: 'emp-104', name: 'Lucas Gabriel Rocha', email: 'lucas.rocha@workpulse.com.br',
@@ -51,7 +47,7 @@ const employees = [
     computer_host: 'SUP-WIN10-099', ip_address: '201.55.12.88', current_app: 'Google Chrome', current_domain: 'youtube.com',
     productivity_score: 54, worked_hours_today: 5.1, productive_hours_today: 2.8, unproductive_hours_today: 1.8,
     neutral_hours_today: 0.5, idle_hours_today: 0.9, schedule_start: '09:00', schedule_end: '18:00',
-    punch_in_time: '09:15', overtime_minutes: 0, pc_lock_enabled: true, pc_lock_status: 'Bloqueado (Ociosidade)', agent_version: '4.2.0'
+    punch_in_time: '09:15', punch_out_time: null, overtime_minutes: 0, pc_lock_enabled: true, pc_lock_status: 'Bloqueado (Ociosidade)', agent_version: '4.2.0'
   },
   {
     id: 'emp-105', name: 'Juliana Fernandes Lima', email: 'juliana.lima@workpulse.com.br',
@@ -60,7 +56,7 @@ const employees = [
     computer_host: 'MKT-MAC-003', ip_address: '10.0.6.22', current_app: 'Canva Pro', current_domain: 'canva.com',
     productivity_score: 91, worked_hours_today: 7.5, productive_hours_today: 6.8, unproductive_hours_today: 0.3,
     neutral_hours_today: 0.4, idle_hours_today: 0.1, schedule_start: '08:30', schedule_end: '17:30',
-    punch_in_time: '08:25', overtime_minutes: 0, pc_lock_enabled: false, pc_lock_status: 'Desbloqueado', agent_version: '4.2.1-lts'
+    punch_in_time: '08:25', punch_out_time: null, overtime_minutes: 0, pc_lock_enabled: false, pc_lock_status: 'Desbloqueado', agent_version: '4.2.1-lts'
   },
   {
     id: 'emp-106', name: 'Fernando Henrique Souza', email: 'fernando.souza@workpulse.com.br',
@@ -69,7 +65,7 @@ const employees = [
     computer_host: 'DEV-LINUX-012', ip_address: '179.184.22.41', current_app: 'Terminal / Docker CLI', current_domain: 'aws.amazon.com',
     productivity_score: 95, worked_hours_today: 8.0, productive_hours_today: 7.6, unproductive_hours_today: 0.1,
     neutral_hours_today: 0.3, idle_hours_today: 0.1, schedule_start: '08:00', schedule_end: '17:00',
-    punch_in_time: '07:50', overtime_minutes: 60, pc_lock_enabled: true, pc_lock_status: 'Desbloqueado', agent_version: '4.2.1-lts'
+    punch_in_time: '07:50', punch_out_time: null, overtime_minutes: 60, pc_lock_enabled: true, pc_lock_status: 'Desbloqueado', agent_version: '4.2.1-lts'
   },
   {
     id: 'emp-107', name: 'Beatriz Martins Castro', email: 'beatriz.castro@workpulse.com.br',
@@ -78,7 +74,7 @@ const employees = [
     computer_host: 'CS-WIN11-008', ip_address: '10.0.4.55', current_app: 'Zendesk Support', current_domain: 'zendesk.com',
     productivity_score: 87, worked_hours_today: 6.9, productive_hours_today: 6.0, unproductive_hours_today: 0.4,
     neutral_hours_today: 0.5, idle_hours_today: 0.2, schedule_start: '08:00', schedule_end: '17:00',
-    punch_in_time: '08:00', overtime_minutes: 0, pc_lock_enabled: false, pc_lock_status: 'Desbloqueado', agent_version: '4.2.1-lts'
+    punch_in_time: '08:00', punch_out_time: null, overtime_minutes: 0, pc_lock_enabled: false, pc_lock_status: 'Desbloqueado', agent_version: '4.2.1-lts'
   },
   {
     id: 'emp-108', name: 'Rodrigo Silveira Dias', email: 'rodrigo.dias@workpulse.com.br',
@@ -87,7 +83,7 @@ const employees = [
     computer_host: 'FIN-WIN11-002', ip_address: '10.0.8.10', current_app: 'SAP S/4HANA', current_domain: 'sap.corp',
     productivity_score: 93, worked_hours_today: 7.4, productive_hours_today: 6.9, unproductive_hours_today: 0.1,
     neutral_hours_today: 0.4, idle_hours_today: 0.1, schedule_start: '09:00', schedule_end: '18:00',
-    punch_in_time: '08:58', overtime_minutes: 0, pc_lock_enabled: true, pc_lock_status: 'Desbloqueado', agent_version: '4.2.1-lts'
+    punch_in_time: '08:58', punch_out_time: null, overtime_minutes: 0, pc_lock_enabled: true, pc_lock_status: 'Desbloqueado', agent_version: '4.2.1-lts'
   },
   {
     id: 'emp-109', name: 'Camila Rossi Ferreira', email: 'camila.ferreira@workpulse.com.br',
@@ -96,7 +92,7 @@ const employees = [
     computer_host: 'DES-MAC-004', ip_address: '186.211.90.15', current_app: 'Figma', current_domain: 'figma.com',
     productivity_score: 79, worked_hours_today: 4.8, productive_hours_today: 3.8, unproductive_hours_today: 0.4,
     neutral_hours_today: 0.6, idle_hours_today: 0.8, schedule_start: '08:30', schedule_end: '17:30',
-    punch_in_time: '08:35', overtime_minutes: 0, pc_lock_enabled: true, pc_lock_status: 'Desbloqueado', agent_version: '4.2.1-lts'
+    punch_in_time: '08:35', punch_out_time: null, overtime_minutes: 0, pc_lock_enabled: true, pc_lock_status: 'Desbloqueado', agent_version: '4.2.1-lts'
   },
   {
     id: 'emp-110', name: 'Thiago Alves Peixoto', email: 'thiago.peixoto@workpulse.com.br',
@@ -105,7 +101,7 @@ const employees = [
     computer_host: 'SDR-WIN10-019', ip_address: '10.0.5.101', current_app: 'Bloqueio Corporativo', current_domain: 'workpulse.local',
     productivity_score: 41, worked_hours_today: 3.2, productive_hours_today: 1.3, unproductive_hours_today: 1.5,
     neutral_hours_today: 0.4, idle_hours_today: 0.8, schedule_start: '09:00', schedule_end: '18:00',
-    punch_in_time: '09:05', overtime_minutes: 0, pc_lock_enabled: true, pc_lock_status: 'Bloqueado (Horário de Almoço)', agent_version: '4.1.9'
+    punch_in_time: '09:05', punch_out_time: null, overtime_minutes: 0, pc_lock_enabled: true, pc_lock_status: 'Bloqueado (Horário de Almoço)', agent_version: '4.1.9'
   }
 ];
 
@@ -123,7 +119,7 @@ const appRules = [
   { id: 'rule-10', app_name: 'Steam Client', process_name: 'steam.exe', domain_pattern: 'steampowered.com', category: 'Improdutivo', group_name: 'Jogos & Lazer', target_department: 'Geral', description: 'Plataforma de jogos terminantemente vetada em PCs corporativos', is_ai_suggested: false }
 ];
 
-// 3. Site Blocks
+// 3. Site Blocks (blocked_departments e work_models são JSONB no PostgreSQL)
 const siteBlocks = [
   { id: 'blk-01', title: 'Bloqueio de Sites de Apostas & Cassinos', category_group: 'Jogos & Apostas', domain_pattern: '*bet365.com;*blaze.com;*sportingbet.com;*betano.com', blocked_departments: ['Geral'], work_models: ['Presencial', 'Híbrido', 'Home Office'], action: 'Bloqueio Total', active: true },
   { id: 'blk-02', title: 'Restrição de Redes Sociais em Horário Central', category_group: 'Redes Sociais', domain_pattern: '*tiktok.com;*instagram.com;*facebook.com;*x.com', blocked_departments: ['Atendimento & Suporte', 'Vendas', 'Financeiro & Jurídico'], work_models: ['Presencial', 'Híbrido'], action: 'Aviso com Justificativa', active: true },
@@ -131,7 +127,7 @@ const siteBlocks = [
   { id: 'blk-04', title: 'Bloqueio de Streaming em Conexão Corporativa', category_group: 'Consumo de Banda', domain_pattern: '*netflix.com;*primevideo.com;*disneyplus.com', blocked_departments: ['Geral'], work_models: ['Presencial'], action: 'Alerta ao Gestor', active: false }
 ];
 
-// 4. PC Lock Policies (COLUNAS EXATAS DA TABELA: id, name, target_department, work_model_target, cutoff_time, grace_period_minutes, auto_lock_after_cutoff, block_weekend_use, lock_message, active)
+// 4. PC Lock Policies
 const pcLockPolicies = [
   {
     id: 'lock-pol-1',
@@ -280,11 +276,11 @@ INSERT INTO public.employees (
     computer_host, ip_address, current_app, current_domain, productivity_score,
     worked_hours_today, productive_hours_today, unproductive_hours_today,
     neutral_hours_today, idle_hours_today, schedule_start, schedule_end,
-    punch_in_time, overtime_minutes, pc_lock_enabled, pc_lock_status, agent_version
+    punch_in_time, punch_out_time, overtime_minutes, pc_lock_enabled, pc_lock_status, agent_version
 ) VALUES
 `;
 
-sql += employees.map(e => `    (${escapeSql(e.id)}, ${escapeSql(e.name)}, ${escapeSql(e.email)}, ${escapeSql(e.avatar)}, ${escapeSql(e.role)}, ${escapeSql(e.department)}, ${escapeSql(e.work_model)}, ${escapeSql(e.status)}, ${escapeSql(e.computer_host)}, ${escapeSql(e.ip_address)}, ${escapeSql(e.current_app)}, ${escapeSql(e.current_domain)}, ${escapeSql(e.productivity_score)}, ${escapeSql(e.worked_hours_today)}, ${escapeSql(e.productive_hours_today)}, ${escapeSql(e.unproductive_hours_today)}, ${escapeSql(e.neutral_hours_today)}, ${escapeSql(e.idle_hours_today)}, ${escapeSql(e.schedule_start)}, ${escapeSql(e.schedule_end)}, ${escapeSql(e.punch_in_time)}, ${escapeSql(e.overtime_minutes)}, ${escapeSql(e.pc_lock_enabled)}, ${escapeSql(e.pc_lock_status)}, ${escapeSql(e.agent_version)})`).join(',\n');
+sql += employees.map(e => `    (${escapeSql(e.id)}, ${escapeSql(e.name)}, ${escapeSql(e.email)}, ${escapeSql(e.avatar)}, ${escapeSql(e.role)}, ${escapeSql(e.department)}, ${escapeSql(e.work_model)}, ${escapeSql(e.status)}, ${escapeSql(e.computer_host)}, ${escapeSql(e.ip_address)}, ${escapeSql(e.current_app)}, ${escapeSql(e.current_domain)}, ${escapeSql(e.productivity_score)}, ${escapeSql(e.worked_hours_today)}, ${escapeSql(e.productive_hours_today)}, ${escapeSql(e.unproductive_hours_today)}, ${escapeSql(e.neutral_hours_today)}, ${escapeSql(e.idle_hours_today)}, ${escapeSql(e.schedule_start)}, ${escapeSql(e.schedule_end)}, ${escapeSql(e.punch_in_time)}, ${escapeSql(e.punch_out_time)}, ${escapeSql(e.overtime_minutes)}, ${escapeSql(e.pc_lock_enabled)}, ${escapeSql(e.pc_lock_status)}, ${escapeSql(e.agent_version)})`).join(',\n');
 
 sql += `\nON CONFLICT (id) DO NOTHING;\n\n`;
 
@@ -297,8 +293,8 @@ INSERT INTO public.app_classification_rules (
 sql += appRules.map(r => `    (${escapeSql(r.id)}, ${escapeSql(r.app_name)}, ${escapeSql(r.process_name)}, ${escapeSql(r.domain_pattern)}, ${escapeSql(r.category)}, ${escapeSql(r.group_name)}, ${escapeSql(r.target_department)}, ${escapeSql(r.description)}, ${escapeSql(r.is_ai_suggested)})`).join(',\n');
 sql += `\nON CONFLICT (id) DO NOTHING;\n\n`;
 
-// 4. SEED: SITE BLOCKS
-sql += `-- 4. SEED: SITE BLOCK RULES
+// 4. SEED: SITE BLOCKS (JSONB)
+sql += `-- 4. SEED: SITE BLOCK RULES (Colunas JSONB)
 INSERT INTO public.site_block_rules (
     id, title, category_group, domain_pattern, blocked_departments, work_models, action, active
 ) VALUES
@@ -335,24 +331,23 @@ INSERT INTO public.suppliers (
 sql += suppliers.map(s => `    (${escapeSql(s.id)}, ${escapeSql(s.name)}, ${escapeSql(s.cnpj)}, ${escapeSql(s.contact_name)}, ${escapeSql(s.email)}, ${escapeSql(s.phone)}, ${escapeSql(s.category)}, ${escapeSql(s.active)})`).join(',\n');
 sql += `\nON CONFLICT (id) DO NOTHING;\n\n`;
 
-// 8. SEED: BACKUP DESTINATION
-sql += `-- 8. SEED: BACKUP DESTINATIONS (Destinos de Backup Padrão)
+// 8. SEED: BACKUP DESTINATIONS (compatível com provider_type e base_uri)
+sql += `-- 8. SEED: BACKUP DESTINATIONS (Destinos de Backup)
 INSERT INTO public.backup_destinations (
-    id, tenant_id, name, type, endpoint, bucket_or_path, is_default, is_active
+    id, tenant_id, name, provider_type, base_uri, config, is_active
 ) VALUES
-    ('dst-local-01', 'tenant-default', 'Storage Local Primário (NAS Synology RS3621)', 'LOCAL', '/mnt/workpulse_storage/primary', '/backups', true, true),
-    ('dst-s3-01', 'tenant-default', 'Nuvem AWS S3 Seguro (Glacier Instant Retrieval)', 'S3', 'https://s3.sa-east-1.amazonaws.com', 'workpulse-enterprise-cold-vault', false, true)
+    ('dst-local-01', 'tenant-default', 'Storage Local Primário (NAS Synology RS3621)', 'LOCAL', '/mnt/workpulse_storage/primary/backups', '{}'::jsonb, true),
+    ('dst-s3-01', 'tenant-default', 'Nuvem AWS S3 Seguro (Glacier Instant Retrieval)', 'S3', 's3://workpulse-enterprise-cold-vault', '{"region": "sa-east-1"}'::jsonb, true)
 ON CONFLICT (id) DO NOTHING;
 
-// 9. SEED: BACKUP JOBS
+-- 9. SEED: BACKUP JOBS (compatível com source_config e policy_config)
 INSERT INTO public.backup_jobs (
-    id, tenant_id, name, source_paths, destination_id, schedule_cron, strategy, compression_algorithm, encryption_algorithm, retention_daily, retention_weekly, retention_monthly, is_active
+    id, tenant_id, name, job_type, priority, source_config, destination_id, policy_config, schedule_cron, status, is_paused
 ) VALUES
-    ('job-daily-01', 'tenant-default', 'Backup Diário Contínuo de Estações e Dados Críticos', ARRAY['/home', '/var/data', 'C:\\\\WorkPulse\\\\Data']::TEXT[], 'dst-local-01', '0 2 * * *', 'INCREMENTAL', 'ZSTD', 'AES-256-GCM', 7, 4, 12, true)
+    ('job-daily-01', 'tenant-default', 'Backup Diário Contínuo de Estações e Dados Críticos', 'INCREMENTAL', 1, '{"paths": ["/home", "/var/data", "C:\\\\WorkPulse\\\\Data"]}'::jsonb, 'dst-local-01', '{"retentionDaily": 7, "retentionWeekly": 4, "retentionMonthly": 12}'::jsonb, '0 2 * * *', 'PENDING', false)
 ON CONFLICT (id) DO NOTHING;
 `;
 
 const outputPath = path.join(__dirname, '..', 'supabase', 'SEED_E_TRIGGERS_PRODUCAO.sql');
 fs.writeFileSync(outputPath, sql, 'utf8');
 console.log('Seed SQL gerado com sucesso em:', outputPath);
-console.log('Tamanho:', sql.length, 'bytes');
