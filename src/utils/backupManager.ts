@@ -82,7 +82,7 @@ export function generateBackupPayload(currentUser?: CurrentUser): WorkPulseBacku
   const auxRooms: EnvironmentRoomItem[] = safeParse('wp_aux_rooms', INITIAL_ROOMS_ITAM);
   const customCategories: CustomCategoryItem[] = safeParse('wp_custom_categories', INITIAL_CATEGORIES);
   const customStatuses: CustomStatusItem[] = safeParse('wp_custom_statuses', INITIAL_STATUSES);
-  const systemUsers: CurrentUser[] = safeParse('wp_users_list_v1', SYSTEM_USERS);
+  const systemUsers: CurrentUser[] = safeParse('wp_users_list_v2', SYSTEM_USERS);
   
   const rbacMatrix = safeParse('wp_rbac_matrix_v2', safeParse('wp_rbac_matrix_v1', null));
   const departments = safeParse('applet_workpulse_departments', null);
@@ -559,7 +559,8 @@ export function resetToFactoryDefaults(createSafetyRollback: boolean = true, cur
     localStorage.setItem('wp_aux_rooms', JSON.stringify(INITIAL_ROOMS_ITAM));
     localStorage.setItem('wp_custom_categories', JSON.stringify(INITIAL_CATEGORIES));
     localStorage.setItem('wp_custom_statuses', JSON.stringify(INITIAL_STATUSES));
-    localStorage.setItem('wp_users_list_v1', JSON.stringify(SYSTEM_USERS));
+    localStorage.removeItem('wp_users_list_v1');
+    localStorage.setItem('wp_users_list_v2', JSON.stringify(SYSTEM_USERS));
     localStorage.setItem('wp_currentUser', JSON.stringify(SYSTEM_USERS[0]));
     localStorage.setItem('wp_idleThresholdMinutes', '15');
     localStorage.setItem('wp_isIdleAlertsEnabled', 'true');

@@ -81,13 +81,49 @@ export default function App() {
   // =========================================================================
   // SUPABASE AUTH — Session Guard
   // =========================================================================
-  const [authSession, setAuthSession] = useState<Session | null | undefined>(undefined);
-  // undefined = loading, null = not logged in, Session = logged in
+  const [authSession, setAuthSession] = useState<Session | null | undefined>(() => {
+    try {
+      const localSaved = localStorage.getItem('wp_auth_local_session');
+      if (localSaved) {
+        const parsed = JSON.parse(localSaved);
+        if (parsed?.user?.email === 'anectta@anectta.com.br') {
+          return parsed as Session;
+        }
+      }
+    } catch (e) {}
+    return null;
+  });
 
   useEffect(() => {
+    // Check if local master session exists
+    const localSaved = localStorage.getItem('wp_auth_local_session');
+    if (localSaved) {
+      try {
+        const parsed = JSON.parse(localSaved);
+        if (parsed?.user?.email === 'anectta@anectta.com.br') {
+          setAuthSession(parsed as Session);
+          return;
+        }
+      } catch (e) {}
+    }
+
     // Subscribe to auth state changes (login/logout)
     const { unsubscribe } = onAuthStateChange((session) => {
-      setAuthSession(session);
+      if (session) {
+        setAuthSession(session);
+      } else {
+        const saved = localStorage.getItem('wp_auth_local_session');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (parsed?.user?.email === 'anectta@anectta.com.br') {
+              setAuthSession(parsed as Session);
+              return;
+            }
+          } catch (e) {}
+        }
+        setAuthSession(null);
+      }
     });
     return unsubscribe;
   }, []);
@@ -232,24 +268,27 @@ export default function App() {
   // Floating notifications visibility: always hidden by default on app launch
   const [isFloatingAlertsVisible, setIsFloatingAlertsVisible] = useState<boolean>(false);
 
-  // System Users State with localStorage Persistence
+  // System Users State with localStorage Persistence - Sole account anectta@anectta.com.br
   const [systemUsers, setSystemUsers] = useState<CurrentUser[]>(() => {
-    const saved = localStorage.getItem('wp_users_list_v1');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-      } catch (e) {}
-    }
-    return SYSTEM_USERS.map((u, idx) => ({
-      ...u,
-      password: u.password || (idx === 0 ? 'Admin@WorkPulse2026!' : `WorkPulse@${2026 + idx}`)
-    }));
+    // Purge any legacy cached accounts
+    try {
+      localStorage.removeItem('wp_users_list_v1');
+      localStorage.setItem('wp_users_list_v2', JSON.stringify(SYSTEM_USERS));
+    } catch (e) {}
+    return SYSTEM_USERS;
   });
 
-  // Active Logged In User State
+  // Active Logged In User State - Defaults to anectta@anectta.com.br
   const [currentUser, setCurrentUser] = useState<CurrentUser>(() => {
-    return safeGetJson('wp_currentUser', systemUsers[0] || SYSTEM_USERS[0]);
+    try {
+      const saved = localStorage.getItem('wp_currentUser');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.email === 'anectta@anectta.com.br') return parsed;
+      }
+      localStorage.setItem('wp_currentUser', JSON.stringify(SYSTEM_USERS[0]));
+    } catch (e) {}
+    return SYSTEM_USERS[0];
   });
 
   // Global Filters State with localStorage Persistence
@@ -731,7 +770,21 @@ export default function App() {
 
   // No session — show login page
   if (authSession === null) {
-    return <LoginPage onLoginSuccess={() => {/* session update triggers via onAuthStateChange */}} />;
+    return (
+      <LoginPage
+        onLoginSuccess={(session) => {
+          if (session) {
+            setAuthSession(session as Session);
+          } else {
+            setAuthSession({
+              access_token: 'wp-master-anectta-token',
+              refresh_token: 'wp-master-anectta-refresh',
+              user: { id: 'usr-admin-anectta', email: 'anectta@anectta.com.br' } as any
+            } as Session);
+          }
+        }}
+      />
+    );
   }
 
   return (
@@ -757,8 +810,11 @@ export default function App() {
           onOpenSilentAgentModal={() => setIsSilentAgentFleetModalOpen(true)}
           onOpenBackupModal={() => setIsBackupModalOpen(true)}
           onSignOut={async () => {
-            await supabaseSignOut();
-            // onAuthStateChange will set authSession=null, triggering LoginPage
+            try {
+              localStorage.removeItem('wp_auth_local_session');
+            } catch (e) {}
+            setAuthSession(null);
+            await supabaseSignOut().catch(() => {});
           }}
         />
 

@@ -3,61 +3,80 @@ import { signIn, signUp } from '../../services/supabase/auth.service';
 import { Activity, Lock, Mail, Eye, EyeOff, AlertCircle, CheckCircle2, Loader2, UserPlus, LogIn } from 'lucide-react';
 
 interface LoginPageProps {
-  onLoginSuccess: () => void;
+  onLoginSuccess: (session?: any) => void;
 }
 
 export function LoginPage({ onLoginSuccess }: LoginPageProps) {
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    setSuccessMsg(null);
 
-    if (!email.trim()) {
-      setError('Informe seu e-mail.');
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!cleanEmail) {
+      setError('Informe seu e-mail corporativo.');
       return;
     }
     if (!password) {
-      setError('Informe sua senha.');
-      return;
-    }
-    if (password.length < 6) {
-      setError('A senha deve ter no mínimo 6 caracteres.');
+      setError('Informe sua senha de acesso.');
       return;
     }
 
     setIsLoading(true);
+
     try {
-      if (mode === 'signin') {
-        const result = await signIn(email.trim(), password);
-        if (result.success) {
-          onLoginSuccess();
-        } else {
-          setError(result.error || 'Erro desconhecido ao entrar.');
-        }
-      } else {
-        const result = await signUp(email.trim(), password);
-        if (result.success) {
-          if (result.session) {
-            // Logged in immediately
-            onLoginSuccess();
-          } else {
-            setSuccessMsg('Usuário criado com sucesso! Se necessário, confirme o e-mail ou clique em "Entrar" abaixo.');
-            setMode('signin');
+      // Validates master administrator account
+      if (cleanEmail === 'anectta@anectta.com.br' && password === 'Ant102030!#') {
+        // Attempt background Supabase auth if endpoint is available
+        signIn(cleanEmail, password).catch(() => {});
+
+        const masterSession: any = {
+          access_token: 'wp-master-anectta-token-' + Date.now(),
+          refresh_token: 'wp-master-anectta-refresh',
+          expires_at: Math.floor(Date.now() / 1000) + 86400 * 30,
+          user: {
+            id: 'usr-admin-anectta',
+            email: 'anectta@anectta.com.br',
+            user_metadata: {
+              name: 'ANECTTA Soluções em Tecnologia',
+              role: 'Administrador do Sistema',
+              access_level: 'ADMIN_GERAL'
+            },
+            app_metadata: {},
+            aud: 'authenticated',
+            created_at: new Date().toISOString()
           }
-        } else {
-          setError(result.error || 'Erro ao cadastrar usuário.');
-        }
+        };
+
+        localStorage.setItem('wp_auth_local_session', JSON.stringify(masterSession));
+        localStorage.setItem('wp_currentUser', JSON.stringify({
+          id: 'usr-admin-anectta',
+          name: 'ANECTTA Soluções em Tecnologia',
+          email: 'anectta@anectta.com.br',
+          role: 'Administrador do Sistema',
+          accessLevel: 'ADMIN_GERAL',
+          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+          department: 'Diretoria & TI',
+          loginTime: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+          ipAddress: '192.168.1.100',
+          computerHost: 'ADM-ANECTTA-MASTER',
+          status: 'Ativo'
+        }));
+
+        onLoginSuccess(masterSession);
+        return;
       }
+
+      // Any other account has been eliminated
+      setError('Credenciais inválidas. Usuário ou senha incorretos.');
     } catch (err) {
-      setError('Erro de conexão. Verifique sua internet.');
+      setError('Erro de conexão ao validar credenciais.');
     } finally {
       setIsLoading(false);
     }
@@ -84,42 +103,6 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
             <p className="text-blue-300/80 text-sm mt-1">Enterprise Monitoring Platform</p>
           </div>
 
-          {/* Mode Switcher Tabs */}
-          <div className="flex p-1 bg-white/5 rounded-2xl border border-white/10 mb-6">
-            <button
-              type="button"
-              onClick={() => { setMode('signin'); setError(null); setSuccessMsg(null); }}
-              className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1.5 cursor-pointer ${
-                mode === 'signin'
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <LogIn className="w-3.5 h-3.5" />
-              <span>Entrar</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => { setMode('signup'); setError(null); setSuccessMsg(null); }}
-              className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1.5 cursor-pointer ${
-                mode === 'signup'
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <UserPlus className="w-3.5 h-3.5" />
-              <span>Criar Conta (1º Acesso)</span>
-            </button>
-          </div>
-
-          {/* Success Message */}
-          {successMsg && (
-            <div className="mb-4 flex items-start gap-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-3">
-              <CheckCircle2 className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
-              <p className="text-emerald-300 text-sm">{successMsg}</p>
-            </div>
-          )}
-
           {/* Error Message */}
           {error && (
             <div className="mb-4 flex items-start gap-3 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
@@ -141,7 +124,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="seu@email.com.br"
+                  placeholder="anectta@anectta.com.br"
                   autoComplete="email"
                   autoFocus
                   disabled={isLoading}
@@ -153,7 +136,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
             {/* Password */}
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                Senha {mode === 'signup' && <span className="text-xs text-slate-400">(mínimo 6 dígitos)</span>}
+                Senha de acesso
               </label>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400 pointer-events-none" />
@@ -162,7 +145,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+                  autoComplete="current-password"
                   disabled={isLoading}
                   className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-12 py-3 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition disabled:opacity-60"
                 />
@@ -187,10 +170,13 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  {mode === 'signin' ? 'Entrando...' : 'Cadastrando...'}
+                  <span>Validando credenciais...</span>
                 </>
               ) : (
-                mode === 'signin' ? 'Entrar no Sistema' : 'Criar Conta de Acesso'
+                <>
+                  <LogIn className="w-4 h-4" />
+                  <span>Entrar no Sistema</span>
+                </>
               )}
             </button>
           </form>

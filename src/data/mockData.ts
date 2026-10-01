@@ -11,69 +11,18 @@ import {
 
 export const SYSTEM_USERS: CurrentUser[] = [
   {
-    id: 'usr-admin-01',
-    name: 'Ricardo Mendes',
-    email: 'ricardo.mendes@workpulse.com.br',
+    id: 'usr-admin-anectta',
+    name: 'ANECTTA Soluções em Tecnologia',
+    email: 'anectta@anectta.com.br',
     role: 'Administrador do Sistema',
     accessLevel: 'ADMIN_GERAL',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
     department: 'Diretoria & TI',
     loginTime: '08:00 (Hoje)',
-    ipAddress: '192.168.1.105',
-    computerHost: 'ADM-WIN11-MASTER',
-    status: 'Ativo'
-  },
-  {
-    id: 'usr-dir-02',
-    name: 'Roberto Fonseca',
-    email: 'roberto.fonseca@workpulse.com.br',
-    role: 'Diretor de Operações Executivas',
-    accessLevel: 'DIRETORIA',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-    department: 'Diretoria Executiva',
-    loginTime: '08:15 (Hoje)',
-    ipAddress: '192.168.1.102',
-    computerHost: 'DIR-MAC-PRO',
-    status: 'Ativo'
-  },
-  {
-    id: 'usr-rh-03',
-    name: 'Mariana Costa',
-    email: 'mariana.costa@workpulse.com.br',
-    role: 'Head de People Analytics & RH',
-    accessLevel: 'RH_PEOPLE',
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
-    department: 'RH & Pessoas',
-    loginTime: '08:30 (Hoje)',
-    ipAddress: '192.168.1.120',
-    computerHost: 'RH-WIN11-002',
-    status: 'Ativo'
-  },
-  {
-    id: 'usr-gestor-04',
-    name: 'Juliana Paes',
-    email: 'juliana.paes@workpulse.com.br',
-    role: 'Gestora de Operações & Suporte',
-    accessLevel: 'GESTORES',
-    avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150',
-    department: 'Atendimento & Suporte',
-    loginTime: '08:05 (Hoje)',
-    ipAddress: '192.168.1.144',
-    computerHost: 'SUP-WIN10-001',
-    status: 'Ativo'
-  },
-  {
-    id: 'usr-colab-05',
-    name: 'Ana Beatris Silva',
-    email: 'ana.silva@workpulse.com.br',
-    role: 'Desenvolvedora Full Stack Sr.',
-    accessLevel: 'COLABORADOR',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
-    department: 'Engenharia',
-    loginTime: '07:55 (Hoje)',
-    ipAddress: '189.122.45.102',
-    computerHost: 'DEV-WIN11-042',
-    status: 'Ativo'
+    ipAddress: '192.168.1.100',
+    computerHost: 'ADM-ANECTTA-MASTER',
+    status: 'Ativo',
+    password: 'Ant102030!#'
   }
 ];
 
