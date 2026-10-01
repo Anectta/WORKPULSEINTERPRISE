@@ -16,7 +16,7 @@ export const SYSTEM_USERS: CurrentUser[] = [
     email: 'anectta@anectta.com.br',
     role: 'Administrador do Sistema',
     accessLevel: 'ADMIN_GERAL',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+    avatar: '/anectta-logo.png',
     department: 'Diretoria & TI',
     loginTime: '08:00 (Hoje)',
     ipAddress: '192.168.1.100',

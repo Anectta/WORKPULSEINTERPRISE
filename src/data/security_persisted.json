@@ -79,6 +79,29 @@
   ],
   "scans": [
     {
+      "id": "scn-mupzlvgw",
+      "tenantId": "tenant-demo",
+      "code": "SCN-2026-0027",
+      "title": "Varredura E2E Integrada de Conformidade e Portas",
+      "scanType": "NETWORK_PORT",
+      "scopeId": "scope-dmz-erp-01",
+      "policyId": "pol-standard-safe",
+      "status": "COMPLETED",
+      "triggeredByUserId": "usr-admin-01",
+      "triggeredByName": "Carlos Amorim",
+      "startedAt": "2026-10-01T20:29:01.712Z",
+      "findingsCountSummary": {
+        "critical": 0,
+        "high": 0,
+        "medium": 0,
+        "low": 0,
+        "info": 0
+      },
+      "createdAt": "2026-10-01T20:29:01.712Z",
+      "updatedAt": "2026-10-01T20:29:01.745Z",
+      "finishedAt": "2026-10-01T20:29:01.745Z"
+    },
+    {
       "id": "scn-mupndeog",
       "tenantId": "tenant-demo",
       "code": "SCN-2026-0026",
@@ -700,12 +723,12 @@
       "assignedToUserId": "usr-ciso-01",
       "assignedToName": "Carlos Amorim",
       "remediationDeadline": "2026-09-13T22:45:07.199Z",
-      "ticketLinkId": "tkt-1790865991371",
+      "ticketLinkId": "tkt-1790886541795",
       "riskScoreContribution": 0,
       "createdAt": "2026-09-05T14:01:00.000Z",
-      "updatedAt": "2026-10-01T14:46:31.450Z",
+      "updatedAt": "2026-10-01T20:29:01.892Z",
       "createdBy": "SecurityEngine/VulnCorrelation",
-      "resolvedAt": "2026-10-01T14:46:31.450Z"
+      "resolvedAt": "2026-10-01T20:29:01.892Z"
     },
     {
       "id": "fnd-002",
@@ -751,6 +774,18 @@
     }
   ],
   "evidence": [
+    {
+      "id": "evi-ret-0bd70205",
+      "findingId": "fnd-001",
+      "tenantId": "tenant-demo",
+      "title": "Evidência de Reteste Formal [RET-00001-LVLW]",
+      "evidenceType": "SYSTEM_LOG",
+      "rawPayload": "=== WORKPULSE RETEST EXECUTION EVIDENCE ===\nCódigo: RET-00001-LVLW\nAlvo: 192.168.1.10\nData da Execução: 2026-10-01T20:29:01.892Z\nOperador: Carlos Amorim (carlos@empresaabc.com.br)\nResultado Verificado: FIXED\n\n--- RESPOSTA COLETADA DA SONDA ---\n[RETEST TARGETED PROBE] Alvo 192.168.1.10 testado via sonda de portas e telemetria.\nResposta: Serviço validado em conformidade com as diretrizes de hardening.\n===========================================",
+      "payloadSha256": "c22e115c6f37ac715f091f805261c66b3d97ca1f04e35632f3c0a62c6cada91e",
+      "sanitizedSensitiveData": true,
+      "collectedAt": "2026-10-01T20:29:01.892Z",
+      "collectedBy": "Carlos Amorim"
+    },
     {
       "id": "evi-ret-473a5bd3",
       "findingId": "fnd-001",
@@ -1065,6 +1100,22 @@
     }
   ],
   "retests": [
+    {
+      "id": "d6de7d9e-6c9b-4bb0-b043-aa5ba33982e1",
+      "findingId": "fnd-001",
+      "tenantId": "tenant-demo",
+      "retestCode": "RET-00001-LVLW",
+      "requestedByUserId": "usr-admin-01",
+      "requestedByName": "Carlos Amorim",
+      "executedByType": "AUTOMATED_ENGINE",
+      "executedByName": "WorkPulse/RetestEngine v2.0",
+      "previousStatus": "FIXED_PENDING_RETEST",
+      "resultingStatus": "VERIFIED",
+      "result": "FIXED",
+      "retestEvidenceId": "evi-ret-0bd70205",
+      "technicalNotes": "Reteste automatizado de conformidade e verificação pós-remediação executado.",
+      "executedAt": "2026-10-01T20:29:01.892Z"
+    },
     {
       "id": "5847c10c-95b1-4662-8af3-1edd13f49087",
       "findingId": "fnd-001",
@@ -1482,6 +1533,185 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "3f44a843-e902-4ffc-b612-40e651958d2c",
+      "tenantId": "tenant-demo",
+      "actorUserId": "usr-admin-01",
+      "actorName": "Carlos Amorim",
+      "actorEmail": "carlos@empresaabc.com.br",
+      "actorRole": "Security Admin",
+      "action": "REPORT_CREATED",
+      "entityType": "SECURITY_REPORT",
+      "entityId": "rep-executive-3fbd8a93",
+      "ipOrigin": "127.0.0.1",
+      "previousState": null,
+      "newState": {
+        "type": "EXECUTIVE",
+        "title": "Relatório Executivo de Pentest e Auditoria E2E de Segurança"
+      },
+      "auditHmacSha256": "cca731c6440110ce3c88262a3e0cf8a906cc4ef7d9767a83985e883dda492160",
+      "createdAt": "2026-10-01T20:29:01.930Z"
+    },
+    {
+      "id": "4cc8fa98-52f3-40d2-9ef5-dfc21bd55d86",
+      "tenantId": "tenant-demo",
+      "actorUserId": "usr-admin-01",
+      "actorName": "Carlos Amorim",
+      "actorEmail": "carlos@empresaabc.com.br",
+      "actorRole": "Security Admin",
+      "action": "RETEST_EXECUTED",
+      "entityType": "SECURITY_FINDING",
+      "entityId": "fnd-001",
+      "ipOrigin": "127.0.0.1",
+      "previousState": {
+        "prevStatus": "FIXED_PENDING_RETEST",
+        "prevRisk": 65
+      },
+      "newState": {
+        "retestCode": "RET-00001-LVLW",
+        "outcome": "FIXED",
+        "newStatus": "VERIFIED",
+        "newRisk": 0
+      },
+      "auditHmacSha256": "b004a2eef575b3e7b41115c3409267e959aa6eafdaeaafe08238b7003a26410f",
+      "createdAt": "2026-10-01T20:29:01.904Z"
+    },
+    {
+      "id": "86f264d5-8381-4df9-9d99-1688fc89def8",
+      "tenantId": "tenant-demo",
+      "actorUserId": "usr-tech-01",
+      "actorName": "Carlos Amorim",
+      "actorEmail": "carlos@empresaabc.com.br",
+      "actorRole": "SecOps Analyst",
+      "action": "TICKET_RESOLVED_PENDING_RETEST",
+      "entityType": "SECURITY_FINDING",
+      "entityId": "fnd-001",
+      "ipOrigin": "127.0.0.1",
+      "previousState": null,
+      "newState": {
+        "ticketId": "tkt-1790886541795",
+        "resolutionNotes": "Cifras e pacotes atualizados com sucesso. Aguardando validação técnica."
+      },
+      "auditHmacSha256": "5e3fda649ed5f388a2c859d3a16afa29dbe0016fd3237279123571d081b49921",
+      "createdAt": "2026-10-01T20:29:01.878Z"
+    },
+    {
+      "id": "ce2f3777-2e1d-40c2-802a-8042c69e00a6",
+      "tenantId": "tenant-demo",
+      "actorUserId": "usr-tech-01",
+      "actorName": "Carlos Amorim",
+      "actorEmail": "carlos@empresaabc.com.br",
+      "actorRole": "SecOps Analyst",
+      "action": "FINDING_STATUS_CHANGED",
+      "entityType": "SECURITY_FINDING",
+      "entityId": "fnd-001",
+      "ipOrigin": "127.0.0.1",
+      "previousState": {
+        "prevStatus": "IN_REMEDIATION"
+      },
+      "newState": {
+        "newStatus": "FIXED_PENDING_RETEST",
+        "justification": "Chamado TKT-SEC-5617 resolvido no CMDB. Remediação aplicada: Cifras e pacotes atualizados com sucesso. Aguardando validação técnica."
+      },
+      "auditHmacSha256": "8f2fe0c745eba13ffb33a2d7d6ef5215434fb4d871f98aac2b0631948429d42b",
+      "createdAt": "2026-10-01T20:29:01.866Z"
+    },
+    {
+      "id": "508df870-9e57-4d75-9185-19962d036a4d",
+      "tenantId": "tenant-demo",
+      "actorUserId": "usr-admin-01",
+      "actorName": "Carlos Amorim",
+      "actorEmail": "carlos@empresaabc.com.br",
+      "actorRole": "Security Admin",
+      "action": "FINDING_TICKET_LINKED",
+      "entityType": "SECURITY_FINDING",
+      "entityId": "fnd-001",
+      "ipOrigin": "127.0.0.1",
+      "previousState": null,
+      "newState": {
+        "ticketId": "tkt-1790886541795",
+        "priority": "alta"
+      },
+      "auditHmacSha256": "bef2ab5f761ac864abf5635ab1321a2617c635ec5f0583c4dca2b8abeeeb1a8d",
+      "createdAt": "2026-10-01T20:29:01.832Z"
+    },
+    {
+      "id": "ed9e2ece-d77a-4d30-98e4-5949869940c6",
+      "tenantId": "tenant-demo",
+      "actorUserId": "usr-admin-01",
+      "actorName": "Carlos Amorim",
+      "actorEmail": "carlos@empresaabc.com.br",
+      "actorRole": "Security Admin",
+      "action": "FINDING_STATUS_CHANGED",
+      "entityType": "SECURITY_FINDING",
+      "entityId": "fnd-001",
+      "ipOrigin": "127.0.0.1",
+      "previousState": {
+        "prevStatus": "OPEN"
+      },
+      "newState": {
+        "newStatus": "IN_REMEDIATION",
+        "justification": "Chamado TKT-SEC-5617 aberto no CMDB para remediação da vulnerabilidade."
+      },
+      "auditHmacSha256": "ee308adad3545c126d9371dccee9054ad0ec139417e3d7375be4b75d1b767fc9",
+      "createdAt": "2026-10-01T20:29:01.819Z"
+    },
+    {
+      "id": "c9517ecb-3a5a-4971-9a14-0cad5dabb842",
+      "tenantId": "tenant-demo",
+      "actorUserId": "usr-admin-01",
+      "actorName": "Carlos Amorim",
+      "actorEmail": "carlos@empresaabc.com.br",
+      "actorRole": "Security Admin",
+      "action": "SCAN_COMPLETED",
+      "entityType": "SECURITY_SCAN",
+      "entityId": "scn-mupzlvgw",
+      "ipOrigin": "127.0.0.1",
+      "previousState": null,
+      "newState": {
+        "findingsCount": 0
+      },
+      "auditHmacSha256": "824b998dd855226a6063690b48b2607e82539d671df8e1982213d4b90a301da8",
+      "createdAt": "2026-10-01T20:29:01.761Z"
+    },
+    {
+      "id": "af30816a-af7e-4f05-8016-4142dce8e9d1",
+      "tenantId": "tenant-demo",
+      "actorUserId": "usr-admin-01",
+      "actorName": "Carlos Amorim",
+      "actorEmail": "carlos@empresaabc.com.br",
+      "actorRole": "Security Admin",
+      "action": "SCAN_LAUNCHED",
+      "entityType": "SECURITY_SCAN",
+      "entityId": "scn-mupzlvgw",
+      "ipOrigin": "127.0.0.1",
+      "previousState": null,
+      "newState": {
+        "target": "192.168.1.10",
+        "scanType": "NETWORK_PORT"
+      },
+      "auditHmacSha256": "441c135a76201369687244b20b340da4178b255aad92dfd6b3dfe91be7cf360b",
+      "createdAt": "2026-10-01T20:29:01.728Z"
+    },
+    {
+      "id": "9c2859d2-a7bf-4e02-938f-69227822b24b",
+      "tenantId": "tenant-demo",
+      "actorUserId": "usr-ciso-01",
+      "actorName": "Helena Valente",
+      "actorEmail": "ciso@empresaabc.com.br",
+      "actorRole": "CISO",
+      "action": "PENTEST_EMERGENCY_STOP_TRIGGERED",
+      "entityType": "PENTEST_PROJECT",
+      "entityId": "pnt-proj-01",
+      "ipOrigin": "127.0.0.1",
+      "previousState": null,
+      "newState": {
+        "reason": "Teste automatizado de Kill Switch",
+        "severity": "CRITICAL_SECURITY_EVENT"
+      },
+      "auditHmacSha256": "e585422d709e5395a10fd40988991c0036512a4537861cba69bd8d7eaaee3e19",
+      "createdAt": "2026-10-01T20:29:01.656Z"
+    },
     {
       "id": "e138e314-e111-4b43-a752-eec344402d28",
       "tenantId": "tenant-demo",
@@ -6889,7 +7119,7 @@
         "userEmail": "ana.ciso@empresaabc.com.br"
       },
       "createdAt": "2026-09-10T22:45:07.200Z",
-      "updatedAt": "2026-10-01T14:46:31.450Z"
+      "updatedAt": "2026-10-01T20:29:01.893Z"
     }
   ],
   "acceptedRisks": [
@@ -6926,6 +7156,45 @@
   ],
   "riskExceptions": [],
   "retestComparisons": [
+    {
+      "id": "cmp-5625abc6",
+      "tenantId": "tenant-demo",
+      "retestId": "d6de7d9e-6c9b-4bb0-b043-aa5ba33982e1",
+      "retestCode": "RET-00001-LVLW",
+      "findingId": "fnd-001",
+      "executedAt": "2026-10-01T20:29:01.892Z",
+      "executedBy": "Carlos Amorim",
+      "outcome": "FIXED",
+      "previous": {
+        "status": "FIXED_PENDING_RETEST",
+        "severity": "HIGH",
+        "riskScore": 65,
+        "evidencePayload": "=== WORKPULSE RETEST EXECUTION EVIDENCE ===\nCódigo: RET-00001-DES9\nAlvo: 192.168.1.10\nData da Execução: 2026-10-01T14:46:31.449Z\nOperador: Carlos Amorim (carlos@empresaabc.com.br)\nResultado Verificado: FIXED\n\n--- RESPOSTA COLETADA DA SONDA ---\n[RETEST TARGETED PROBE] Alvo 192.168.1.10 testado via sonda de portas e telemetria.\nResposta: Serviço validado em conformidade com as diretrizes de hardening.\n===========================================",
+        "evidenceDate": "2026-10-01T14:46:31.450Z"
+      },
+      "current": {
+        "status": "VERIFIED",
+        "severity": "INFO",
+        "riskScore": 0,
+        "evidencePayload": "=== WORKPULSE RETEST EXECUTION EVIDENCE ===\nCódigo: RET-00001-LVLW\nAlvo: 192.168.1.10\nData da Execução: 2026-10-01T20:29:01.892Z\nOperador: Carlos Amorim (carlos@empresaabc.com.br)\nResultado Verificado: FIXED\n\n--- RESPOSTA COLETADA DA SONDA ---\n[RETEST TARGETED PROBE] Alvo 192.168.1.10 testado via sonda de portas e telemetria.\nResposta: Serviço validado em conformidade com as diretrizes de hardening.\n===========================================",
+        "evidenceDate": "2026-10-01T20:29:01.892Z"
+      },
+      "riskDelta": -65,
+      "technicalNotes": "Reteste automatizado de conformidade e verificação pós-remediação executado.",
+      "summary": "Reteste FIXED: Risco anterior 65.0 -> Atual 0.0 (Δ -65.0)",
+      "retestResult": "FIXED",
+      "beforeState": {
+        "status": "FIXED_PENDING_RETEST",
+        "riskScore": 65,
+        "evidenceSummary": "=== WORKPULSE RETEST EXECUTION EVIDENCE ===\nCódigo: RET-00001-DES9\nAlvo: 192.168.1.10\nData da Execuç"
+      },
+      "afterState": {
+        "status": "VERIFIED",
+        "riskScore": 0,
+        "evidenceSummary": "=== WORKPULSE RETEST EXECUTION EVIDENCE ===\nCódigo: RET-00001-LVLW\nAlvo: 192.168.1.10\nData da Execuç"
+      },
+      "riskScoreDelta": -65
+    },
     {
       "id": "cmp-a8373a0c",
       "tenantId": "tenant-demo",
@@ -7959,6 +8228,20 @@
   ],
   "riskHistories": [
     {
+      "id": "rsk-hist-64d61ccf",
+      "findingId": "fnd-001",
+      "timestamp": "2026-10-01T20:29:01.892Z",
+      "score": 0,
+      "severity": "HIGH",
+      "factorBreakdown": {
+        "baseCvss": 7.5,
+        "criticalityMultiplier": 1.2,
+        "exposureFactor": 1,
+        "remediationDiscount": 1
+      },
+      "triggerReason": "Reteste RET-00001-LVLW: Resultado FIXED. Pontuação alterada de 65 para 0."
+    },
+    {
       "id": "rsk-hist-95211498",
       "findingId": "fnd-001",
       "timestamp": "2026-10-01T14:46:31.450Z",
@@ -8310,6 +8593,94 @@
     }
   ],
   "reports": [
+    {
+      "id": "rep-executive-3fbd8a93",
+      "tenantId": "tenant-demo",
+      "type": "EXECUTIVE",
+      "title": "Relatório Executivo de Pentest e Auditoria E2E de Segurança",
+      "description": "Relatório emitido pela plataforma WorkPulse Security.",
+      "periodStart": "2026-09-01T20:29:01.916Z",
+      "periodEnd": "2026-10-01T20:29:01.916Z",
+      "generatedBy": {
+        "userId": "usr-admin-01",
+        "userName": "Carlos Amorim",
+        "userEmail": "carlos@empresaabc.com.br",
+        "userRole": "Security Admin"
+      },
+      "generatedAt": "2026-10-01T20:29:01.916Z",
+      "status": "GENERATED",
+      "version": "1.0.0",
+      "confidentialityLevel": "CONFIDENTIAL",
+      "sections": [
+        "Identificação",
+        "Sumário Executivo",
+        "Achados & Riscos",
+        "Conclusão"
+      ],
+      "executiveSummary": {
+        "overallRiskLevel": "LOW",
+        "securityScore": 85,
+        "riskScore": 15,
+        "criticalFindingsCount": 0,
+        "highFindingsCount": 2,
+        "summaryText": "Relatório compilado automaticamente consolidando os dados técnicos de segurança do ambiente.",
+        "keyRecommendations": [
+          "Acompanhar prazos de remediação",
+          "Realizar retestes periódicos"
+        ]
+      },
+      "findingsSummary": [
+        {
+          "id": "fnd-001",
+          "code": "SEC-FND-00001",
+          "title": "OpenSSL 1.1.1k Desatualizado com Vulnerabilidade de DoS Remoto",
+          "description": "A versão 1.1.1k do OpenSSL identificada no servidor ERP é vulnerável a loop infinito no parsing de certificados.",
+          "severity": "HIGH",
+          "cvssScore": 7.5,
+          "confidence": "HIGH",
+          "riskScore": 0,
+          "assetName": "OpenSSL Cryptographic Library",
+          "ciName": "ci-srv-erp",
+          "targetValue": "Alvo Corporativo",
+          "evidenceSummary": "Evidência técnica registrada no repositório.",
+          "recommendation": "Atualizar os pacotes do Linux para OpenSSL 1.1.1n ou superior.",
+          "status": "VERIFIED"
+        },
+        {
+          "id": "fnd-002",
+          "code": "SEC-FND-00002",
+          "title": "Porta de Gerenciamento RDP (3389) Aberta",
+          "description": "Serviço de desktop remoto exposto na rede interna sem isolamento por VPN.",
+          "severity": "HIGH",
+          "cvssScore": 7.3,
+          "confidence": "HIGH",
+          "riskScore": 7.3,
+          "assetName": "Microsoft Remote Desktop / TCP 3389",
+          "ciName": "ci-srv-erp",
+          "targetValue": "Alvo Corporativo",
+          "evidenceSummary": "Evidência técnica registrada no repositório.",
+          "recommendation": "Bloquear porta 3389 no firewall perimetral e exigir VPN com MFA.",
+          "status": "ACCEPTED_RISK"
+        },
+        {
+          "id": "fnd-003",
+          "code": "SEC-FND-00003",
+          "title": "Ausência de Content-Security-Policy (CSP)",
+          "description": "O cabeçalho Content-Security-Policy não está configurado na aplicação web.",
+          "severity": "MEDIUM",
+          "cvssScore": 5.4,
+          "confidence": "HIGH",
+          "riskScore": 3.24,
+          "assetName": "HTTP/HTTPS Web Service",
+          "ciName": "ci-router",
+          "targetValue": "https://ais-dev-j5xfxvq46npqvw5wbs7pnc-660100840056.us-west2.run.app",
+          "evidenceSummary": "Evidência técnica registrada no repositório.",
+          "recommendation": "Configurar CSP com 'default-src 'self''.",
+          "status": "NEW"
+        }
+      ],
+      "conclusionText": "Recomenda-se manter o ciclo de governança e monitoramento contínuo."
+    },
     {
       "id": "rep-executive-f8597ce5",
       "tenantId": "tenant-demo",

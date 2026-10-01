@@ -36,10 +36,13 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
         // Attempt background Supabase auth if endpoint is available
         signIn(cleanEmail, password).catch(() => {});
 
+        const now = Date.now();
         const masterSession: any = {
-          access_token: 'wp-master-anectta-token-' + Date.now(),
+          access_token: 'wp-master-anectta-token-' + now,
           refresh_token: 'wp-master-anectta-refresh',
-          expires_at: Math.floor(Date.now() / 1000) + 86400 * 30,
+          expires_at: Math.floor(now / 1000) + 86400 * 30,
+          created_at_epoch: now,
+          issued_at: now,
           user: {
             id: 'usr-admin-anectta',
             email: 'anectta@anectta.com.br',
@@ -50,7 +53,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
             },
             app_metadata: {},
             aud: 'authenticated',
-            created_at: new Date().toISOString()
+            created_at: new Date(now).toISOString()
           }
         };
 
@@ -61,7 +64,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
           email: 'anectta@anectta.com.br',
           role: 'Administrador do Sistema',
           accessLevel: 'ADMIN_GERAL',
-          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+          avatar: '/anectta-logo.png',
           department: 'Diretoria & TI',
           loginTime: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
           ipAddress: '192.168.1.100',
@@ -96,11 +99,11 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl p-8">
           {/* Logo + Brand */}
           <div className="flex flex-col items-center mb-6">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/30 mb-4">
-              <Activity className="w-8 h-8 text-white" />
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-950/80 to-slate-900 border border-blue-500/30 flex items-center justify-center shadow-lg shadow-blue-500/20 mb-3 p-2">
+              <img src="/anectta-logo.png" alt="ANECTTA Logo" className="w-16 h-16 object-contain" />
             </div>
             <h1 className="text-2xl font-bold text-white tracking-tight">WorkPulse</h1>
-            <p className="text-blue-300/80 text-sm mt-1">Enterprise Monitoring Platform</p>
+            <p className="text-blue-300/80 text-sm mt-0.5">ANECTTA Soluções em Tecnologia</p>
           </div>
 
           {/* Error Message */}

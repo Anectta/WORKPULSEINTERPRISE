@@ -6,6 +6,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { onAuthStateChange, signOut as supabaseSignOut } from './services/supabase/auth.service';
+import { isSessionGloballyValid, forceGlobalSignOut, subscribeToGlobalLogout } from './services/sessionSecurity';
 import { fetchEmployees, upsertEmployees, upsertEmployee, deleteEmployee } from './services/supabase/employees.service';
 import { fetchAppRules, upsertAppRules, upsertAppRule, deleteAppRule } from './services/supabase/appRules.service';
 import { fetchSiteBlocks, upsertSiteBlocks, upsertSiteBlock, deleteSiteBlock } from './services/supabase/siteBlocks.service';
@@ -86,26 +87,39 @@ export default function App() {
       const localSaved = localStorage.getItem('wp_auth_local_session');
       if (localSaved) {
         const parsed = JSON.parse(localSaved);
-        if (parsed?.user?.email === 'anectta@anectta.com.br') {
+        if (parsed?.user?.email === 'anectta@anectta.com.br' && isSessionGloballyValid(parsed)) {
           return parsed as Session;
         }
+        // Purge invalid/globally revoked session
+        localStorage.removeItem('wp_auth_local_session');
+        localStorage.removeItem('wp_currentUser');
       }
     } catch (e) {}
     return null;
   });
 
   useEffect(() => {
-    // Check if local master session exists
+    // Check initial validity
     const localSaved = localStorage.getItem('wp_auth_local_session');
     if (localSaved) {
       try {
         const parsed = JSON.parse(localSaved);
-        if (parsed?.user?.email === 'anectta@anectta.com.br') {
-          setAuthSession(parsed as Session);
+        if (!isSessionGloballyValid(parsed)) {
+          localStorage.removeItem('wp_auth_local_session');
+          localStorage.removeItem('wp_currentUser');
+          setAuthSession(null);
           return;
         }
-      } catch (e) {}
+      } catch (e) {
+        setAuthSession(null);
+        return;
+      }
     }
+
+    // Subscribe to cross-tab / cross-device global logout broadcast
+    const unsubscribeGlobal = subscribeToGlobalLogout(() => {
+      setAuthSession(null);
+    });
 
     // Subscribe to auth state changes (login/logout)
     const { unsubscribe } = onAuthStateChange((session) => {
@@ -116,7 +130,7 @@ export default function App() {
         if (saved) {
           try {
             const parsed = JSON.parse(saved);
-            if (parsed?.user?.email === 'anectta@anectta.com.br') {
+            if (isSessionGloballyValid(parsed)) {
               setAuthSession(parsed as Session);
               return;
             }
@@ -125,7 +139,47 @@ export default function App() {
         setAuthSession(null);
       }
     });
-    return unsubscribe;
+
+    // Periodic heartbeat (every 10s) and on tab focus to enforce global logout
+    const checkInterval = setInterval(() => {
+      const saved = localStorage.getItem('wp_auth_local_session');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (!isSessionGloballyValid(parsed)) {
+            localStorage.removeItem('wp_auth_local_session');
+            localStorage.removeItem('wp_currentUser');
+            setAuthSession(null);
+          }
+        } catch {
+          setAuthSession(null);
+        }
+      }
+    }, 10000);
+
+    const onFocus = () => {
+      const saved = localStorage.getItem('wp_auth_local_session');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (!isSessionGloballyValid(parsed)) {
+            localStorage.removeItem('wp_auth_local_session');
+            localStorage.removeItem('wp_currentUser');
+            setAuthSession(null);
+          }
+        } catch {
+          setAuthSession(null);
+        }
+      }
+    };
+    window.addEventListener('focus', onFocus);
+
+    return () => {
+      unsubscribeGlobal();
+      unsubscribe();
+      clearInterval(checkInterval);
+      window.removeEventListener('focus', onFocus);
+    };
   }, []);
 
   // =========================================================================
@@ -284,7 +338,9 @@ export default function App() {
       const saved = localStorage.getItem('wp_currentUser');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.email === 'anectta@anectta.com.br') return parsed;
+        if (parsed.email === 'anectta@anectta.com.br') {
+          return { ...parsed, avatar: '/anectta-logo.png' };
+        }
       }
       localStorage.setItem('wp_currentUser', JSON.stringify(SYSTEM_USERS[0]));
     } catch (e) {}
@@ -768,6 +824,13 @@ export default function App() {
     } catch {}
   };
 
+  const handleGlobalSignOut = async () => {
+    try {
+      await forceGlobalSignOut();
+    } catch {}
+    setAuthSession(null);
+  };
+
   // =========================================================================
   // AUTH GUARD — Render login or loading before the main app
   // =========================================================================
@@ -794,11 +857,16 @@ export default function App() {
           if (session) {
             setAuthSession(session as Session);
           } else {
+            const now = Date.now();
             setAuthSession({
-              access_token: 'wp-master-anectta-token',
+              access_token: 'wp-master-anectta-token-' + now,
               refresh_token: 'wp-master-anectta-refresh',
+              expires_in: 86400,
+              token_type: 'bearer',
+              created_at_epoch: now,
+              issued_at: now,
               user: { id: 'usr-admin-anectta', email: 'anectta@anectta.com.br' } as any
-            } as Session);
+            } as unknown as Session);
           }
         }}
       />
@@ -828,6 +896,7 @@ export default function App() {
           onOpenSilentAgentModal={() => setIsSilentAgentFleetModalOpen(true)}
           onOpenBackupModal={() => setIsBackupModalOpen(true)}
           onSignOut={handleSignOut}
+          onGlobalSignOut={handleGlobalSignOut}
         />
 
         {/* Tab Content Viewport */}

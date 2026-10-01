@@ -68,6 +68,7 @@ interface SidebarProps {
   onOpenSilentAgentModal?: () => void;
   onOpenBackupModal?: () => void;
   onSignOut?: () => void;
+  onGlobalSignOut?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -84,7 +85,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenIdleAlertsDrawer,
   onOpenSilentAgentModal,
   onOpenBackupModal,
-  onSignOut
+  onSignOut,
+  onGlobalSignOut
 }) => {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
@@ -118,10 +120,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside className="w-full lg:w-72 bg-slate-950 border-r border-slate-800/80 p-4 shrink-0 flex flex-col justify-between text-slate-300">
       <div className="space-y-4">
-        {/* BRAND LOGO TOP WITH BLUE/PURPLE GRADIENT EMBLEM */}
+        {/* BRAND LOGO TOP WITH ANECTTA EMBLEM */}
         <div className="px-2 pt-2 pb-1 flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 ring-1 ring-white/20 shrink-0">
-            <Zap className="w-5 h-5 fill-white text-white" />
+          <div className="w-10 h-10 rounded-xl bg-slate-900 border border-blue-500/30 flex items-center justify-center p-1 shadow-lg shadow-blue-500/20 shrink-0">
+            <img src="/anectta-logo.png" alt="ANECTTA Logo" className="w-8 h-8 object-contain" />
           </div>
           <div>
             <div className="flex items-center space-x-1.5">
@@ -337,12 +339,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
                               setCurrentUser?.(availableUsers[0]);
                             }
                           }}
-                          className="py-1.5 px-3 bg-red-950/60 hover:bg-red-900/60 text-red-300 font-bold rounded-xl text-center transition-colors flex items-center space-x-1 text-[11px] border border-red-800"
+                          className="py-1.5 px-3 bg-red-950/60 hover:bg-red-900/60 text-red-300 font-bold rounded-xl text-center transition-colors flex items-center space-x-1 text-[11px] border border-red-800 cursor-pointer"
                         >
                           <LogOut className="w-3 h-3 text-red-400" />
                           <span>Sair</span>
                         </button>
                       </div>
+
+                      {onGlobalSignOut && (
+                        <button
+                          onClick={() => {
+                            setIsProfileDropdownOpen(false);
+                            onGlobalSignOut();
+                          }}
+                          className="w-full py-2 px-3 bg-red-950/80 hover:bg-red-900 text-red-200 hover:text-white font-bold rounded-xl text-center transition-colors flex items-center justify-center space-x-1.5 text-[11px] border border-red-700/80 cursor-pointer shadow-xs"
+                          title="Desconecta este usuário em TODOS os computadores conectados"
+                        >
+                          <ShieldAlert className="w-3.5 h-3.5 text-red-400" />
+                          <span>Deslogar de Todos os PCs (Global)</span>
+                        </button>
+                      )}
                     </div>
                   </div>
                 </>
@@ -482,17 +498,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </div>
 
-      {/* Persistent Bottom Bar with 1-Click Sair do Sistema */}
+      {/* Persistent Bottom Bar with 1-Click Sair do Sistema and Global Logout */}
       {onSignOut && (
-        <div className="pt-3 mt-4 border-t border-slate-800/80 space-y-1.5 shrink-0">
+        <div className="pt-3 mt-4 border-t border-slate-800/80 space-y-2 shrink-0">
           <button
             onClick={onSignOut}
-            className="w-full flex items-center justify-center space-x-2 py-2.5 px-3 bg-red-950/40 hover:bg-red-900/60 text-red-300 hover:text-white border border-red-900/60 hover:border-red-600 rounded-xl font-bold text-xs shadow-xs transition-all cursor-pointer group active:scale-[0.98]"
-            title="Encerrar sessão de forma segura para não persistir nesta máquina"
+            className="w-full flex items-center justify-center space-x-2 py-2 px-3 bg-red-950/40 hover:bg-red-900/60 text-red-300 hover:text-white border border-red-900/60 hover:border-red-600 rounded-xl font-bold text-xs shadow-xs transition-all cursor-pointer group active:scale-[0.98]"
+            title="Encerrar sessão de forma segura nesta máquina"
           >
             <LogOut className="w-4 h-4 text-red-400 group-hover:scale-110 transition-transform" />
-            <span>Sair do Sistema</span>
+            <span>Sair desta Máquina</span>
           </button>
+
+          {onGlobalSignOut && (
+            <button
+              onClick={onGlobalSignOut}
+              className="w-full flex items-center justify-center space-x-1.5 py-1.5 px-3 bg-red-950/80 hover:bg-red-900 text-red-200 hover:text-white border border-red-700/80 hover:border-red-500 rounded-xl font-bold text-[11px] shadow-xs transition-all cursor-pointer group active:scale-[0.98]"
+              title="Desconecta este usuário em TODOS os computadores e navegadores simultaneamente"
+            >
+              <ShieldAlert className="w-3.5 h-3.5 text-red-400 group-hover:scale-110 transition-transform" />
+              <span>Deslogar de Todos os PCs</span>
+            </button>
+          )}
+
           <div className="flex items-center justify-between px-1 text-[10px] text-slate-500 font-mono">
             <span>Sessão Ativa</span>
             <span className="text-emerald-400 flex items-center gap-1">
