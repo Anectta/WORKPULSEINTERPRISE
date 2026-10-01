@@ -22,7 +22,8 @@ import {
   Download,
   Eye,
   CalendarCheck,
-  Wifi
+  Wifi,
+  LogOut
 } from 'lucide-react';
 import { SYSTEM_MODULES, ModuleConfig } from '../data/modulesConfig';
 import { TabType } from './Sidebar';
@@ -47,6 +48,7 @@ interface PageHeaderCardProps {
   onTriggerTestIdleAlert?: () => void;
   isSimulating?: boolean;
   setIsSimulating?: (val: boolean) => void;
+  onSignOut?: () => void;
 }
 
 export const PageHeaderCard: React.FC<PageHeaderCardProps> = ({
@@ -66,7 +68,8 @@ export const PageHeaderCard: React.FC<PageHeaderCardProps> = ({
   setIdleThresholdMinutes,
   onTriggerTestIdleAlert,
   isSimulating,
-  setIsSimulating
+  setIsSimulating,
+  onSignOut
 }) => {
   const mod: ModuleConfig = SYSTEM_MODULES[activeTab] || SYSTEM_MODULES.overview;
 
@@ -125,6 +128,17 @@ export const PageHeaderCard: React.FC<PageHeaderCardProps> = ({
           {/* Right Side: Primary & Secondary Actions */}
           <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-end shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100 dark:border-slate-800">
             {secondaryAction}
+
+            {onSignOut && (
+              <button
+                onClick={onSignOut}
+                className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 dark:bg-red-950/40 dark:hover:bg-red-900/60 dark:text-red-400 font-bold text-xs rounded-xl flex items-center space-x-1.5 border border-red-200/80 dark:border-red-800/80 shadow-2xs transition-all cursor-pointer group active:scale-95"
+                title="Encerrar sessão de forma segura nesta máquina"
+              >
+                <LogOut className="w-3.5 h-3.5 text-red-600 dark:text-red-400 group-hover:scale-110 transition-transform" />
+                <span>Sair</span>
+              </button>
+            )}
 
             {activeTab === 'activity' ? (
               <div className="flex items-center space-x-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200/90 dark:border-slate-700 p-1.5 sm:p-2 rounded-2xl text-xs flex-wrap shadow-2xs">

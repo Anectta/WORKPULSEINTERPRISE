@@ -59,6 +59,7 @@ interface NavbarProps {
   setIsDarkMode: (val: boolean) => void;
   onOpenSilentAgentModal?: () => void;
   onOpenBackupModal?: () => void;
+  onSignOut?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -87,7 +88,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   isDarkMode,
   setIsDarkMode,
   onOpenSilentAgentModal,
-  onOpenBackupModal
+  onOpenBackupModal,
+  onSignOut
 }) => {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
@@ -356,13 +358,18 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                       <button
                         onClick={() => {
-                          setCurrentUser(availableUsers[0]);
                           setIsProfileDropdownOpen(false);
+                          if (onSignOut) {
+                            onSignOut();
+                          } else {
+                            setCurrentUser(availableUsers[0]);
+                          }
                         }}
-                        className="py-1.5 px-3 bg-red-50 hover:bg-red-100 text-red-700 font-bold rounded-xl text-center transition-colors flex items-center space-x-1 text-[11px] border border-red-200/80"
+                        className="py-1.5 px-3 bg-red-50 hover:bg-red-100 text-red-700 font-bold rounded-xl text-center transition-colors flex items-center space-x-1 text-[11px] border border-red-200/80 cursor-pointer"
+                        title="Encerrar sessão de forma segura nesta máquina"
                       >
                         <LogOut className="w-3 h-3 text-red-600" />
-                        <span>Reiniciar Sessão</span>
+                        <span>Sair do Sistema</span>
                       </button>
                     </div>
                   </div>
@@ -371,6 +378,18 @@ export const Navbar: React.FC<NavbarProps> = ({
               </>
             )}
           </div>
+
+          {/* Direct Sair Button in Navbar */}
+          {onSignOut && (
+            <button
+              onClick={onSignOut}
+              className="flex items-center space-x-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/60 text-red-700 dark:text-red-400 font-bold text-xs rounded-xl border border-red-200 dark:border-red-800 transition shadow-2xs cursor-pointer group active:scale-95"
+              title="Encerrar sessão com segurança nesta máquina"
+            >
+              <LogOut className="w-3.5 h-3.5 text-red-600 dark:text-red-400 group-hover:scale-110 transition-transform" />
+              <span>Sair</span>
+            </button>
+          )}
         </div>
 
       </div>

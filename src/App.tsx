@@ -750,6 +750,24 @@ export default function App() {
     }
   };
 
+  const handleSignOut = async () => {
+    try {
+      localStorage.removeItem('wp_auth_local_session');
+      localStorage.removeItem('wp_currentUser');
+      // Purge any stored Supabase or session tokens
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith('sb-') || key.includes('auth-token') || key.includes('supabase')) {
+          localStorage.removeItem(key);
+        }
+      });
+      sessionStorage.clear();
+    } catch (e) {}
+    setAuthSession(null);
+    try {
+      await supabaseSignOut();
+    } catch {}
+  };
+
   // =========================================================================
   // AUTH GUARD — Render login or loading before the main app
   // =========================================================================
@@ -809,13 +827,7 @@ export default function App() {
           onOpenIdleAlertsDrawer={() => setIsIdleDrawerOpen(true)}
           onOpenSilentAgentModal={() => setIsSilentAgentFleetModalOpen(true)}
           onOpenBackupModal={() => setIsBackupModalOpen(true)}
-          onSignOut={async () => {
-            try {
-              localStorage.removeItem('wp_auth_local_session');
-            } catch (e) {}
-            setAuthSession(null);
-            await supabaseSignOut().catch(() => {});
-          }}
+          onSignOut={handleSignOut}
         />
 
         {/* Tab Content Viewport */}
@@ -836,6 +848,7 @@ export default function App() {
               onTriggerTestIdleAlert={handleTriggerTestIdleAlert}
               isSimulating={isSimulating}
               setIsSimulating={setIsSimulating}
+              onSignOut={handleSignOut}
             />
           )}
           {activeTab === 'overview' && (

@@ -138,12 +138,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="space-y-2 pb-3 border-b border-slate-800/80">
           {/* User Profile Card & Switcher Popover */}
           {currentUser && (
-            <div className="relative">
-              <button
-                onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                className="w-full bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-700 rounded-xl p-2.5 flex items-center justify-between shadow-2xs cursor-pointer transition-all group text-left"
-                title="Sessão Ativa do Usuário - Clique para ver detalhes e trocar conta"
-              >
+            <div className="flex items-center gap-1.5">
+              <div className="relative flex-1 min-w-0">
+                <button
+                  onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                  className="w-full bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-700 rounded-xl p-2.5 flex items-center justify-between shadow-2xs cursor-pointer transition-all group text-left"
+                  title="Sessão Ativa do Usuário - Clique para ver detalhes e trocar conta"
+                >
                 <div className="flex items-center space-x-2.5 min-w-0">
                   <div className="relative shrink-0">
                     {currentUser.avatar ? (
@@ -347,6 +348,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </>
               )}
             </div>
+
+              {/* Direct Quick Sair Button */}
+              {onSignOut && (
+                <button
+                  onClick={onSignOut}
+                  className="flex items-center space-x-1.5 px-2.5 py-2.5 bg-red-950/40 hover:bg-red-900/70 border border-red-900/60 hover:border-red-600 text-red-400 hover:text-red-200 rounded-xl shadow-2xs transition-all cursor-pointer shrink-0 group active:scale-95"
+                  title="Sair do Sistema (Encerrar sessão nesta máquina)"
+                >
+                  <LogOut className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                  <span className="text-[11px] font-bold">Sair</span>
+                </button>
+              )}
+            </div>
           )}
 
           {/* Quick System Action Buttons: Agente Silencioso & Backup */}
@@ -467,6 +481,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </nav>
         </div>
       </div>
+
+      {/* Persistent Bottom Bar with 1-Click Sair do Sistema */}
+      {onSignOut && (
+        <div className="pt-3 mt-4 border-t border-slate-800/80 space-y-1.5 shrink-0">
+          <button
+            onClick={onSignOut}
+            className="w-full flex items-center justify-center space-x-2 py-2.5 px-3 bg-red-950/40 hover:bg-red-900/60 text-red-300 hover:text-white border border-red-900/60 hover:border-red-600 rounded-xl font-bold text-xs shadow-xs transition-all cursor-pointer group active:scale-[0.98]"
+            title="Encerrar sessão de forma segura para não persistir nesta máquina"
+          >
+            <LogOut className="w-4 h-4 text-red-400 group-hover:scale-110 transition-transform" />
+            <span>Sair do Sistema</span>
+          </button>
+          <div className="flex items-center justify-between px-1 text-[10px] text-slate-500 font-mono">
+            <span>Sessão Ativa</span>
+            <span className="text-emerald-400 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              Protegida
+            </span>
+          </div>
+        </div>
+      )}
 
     </aside>
   );
