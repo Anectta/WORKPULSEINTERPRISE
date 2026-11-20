@@ -18,25 +18,16 @@ import { ITAsset } from '../../src/types';
 import { INITIAL_CMDB_ITEMS, INITIAL_CMDB_TICKETS } from '../../src/data/cmdbInitialData';
 import { INITIAL_IT_ASSETS } from '../../src/data/initialAssets';
 import { SecurityOrchestrator } from './securityOrchestrator';
-
-const CMDB_PERSIST_FILE = path.join(process.cwd(), 'src', 'data', 'cmdb_persisted.json');
+import { getCmdbStoreSnapshot, replaceCmdbTicketsForTenant } from '../cmdbRouter';
 
 export class SecurityIntegrationBridge {
   /**
    * Carrega CIs do CMDB (persisted store ou fallback inicial)
    */
   private static getCmdbItems(tenantId: string): ConfigurationItem[] {
-    try {
-      if (fs.existsSync(CMDB_PERSIST_FILE)) {
-        const raw = fs.readFileSync(CMDB_PERSIST_FILE, 'utf-8');
-        const parsed = JSON.parse(raw);
-        if (parsed.items && Array.isArray(parsed.items)) {
-          return parsed.items.filter((i: ConfigurationItem) => i.tenantId === tenantId);
-        }
-      }
-    } catch (err) {
-      console.warn('[SecurityBridge] Erro ao ler cmdb_persisted.json, usando fallback', err);
-    }
+    // Lê do cache em memória do CMDB (dono único de cmdb_persisted.json)
+    const items = getCmdbStoreSnapshot().items;
+    if (Array.isArray(items)) return items.filter(i => i.tenantId === tenantId);
     return INITIAL_CMDB_ITEMS.filter(i => i.tenantId === tenantId);
   }
 
@@ -44,17 +35,8 @@ export class SecurityIntegrationBridge {
    * Carrega Chamados/Tickets do CMDB
    */
   private static getCmdbTickets(tenantId: string): CMDBTicketLink[] {
-    try {
-      if (fs.existsSync(CMDB_PERSIST_FILE)) {
-        const raw = fs.readFileSync(CMDB_PERSIST_FILE, 'utf-8');
-        const parsed = JSON.parse(raw);
-        if (parsed.tickets && Array.isArray(parsed.tickets)) {
-          return parsed.tickets.filter((t: CMDBTicketLink) => t.tenantId === tenantId);
-        }
-      }
-    } catch (err) {
-      console.warn('[SecurityBridge] Erro ao ler tickets do CMDB, usando fallback', err);
-    }
+    const tickets = getCmdbStoreSnapshot().tickets;
+    if (Array.isArray(tickets)) return tickets.filter(t => t.tenantId === tenantId);
     return (INITIAL_CMDB_TICKETS as unknown as CMDBTicketLink[]).filter(t => t.tenantId === tenantId);
   }
 
@@ -63,17 +45,9 @@ export class SecurityIntegrationBridge {
    */
   private static saveCmdbTickets(tenantId: string, updatedTickets: CMDBTicketLink[]): void {
     try {
-      let store: any = { items: INITIAL_CMDB_ITEMS, tickets: INITIAL_CMDB_TICKETS };
-      if (fs.existsSync(CMDB_PERSIST_FILE)) {
-        const raw = fs.readFileSync(CMDB_PERSIST_FILE, 'utf-8');
-        store = JSON.parse(raw);
-      }
-      
-      const otherTenantTickets = (store.tickets || []).filter((t: CMDBTicketLink) => t.tenantId !== tenantId);
-      store.tickets = [...otherTenantTickets, ...updatedTickets];
-
-      fs.mkdirSync(path.dirname(CMDB_PERSIST_FILE), { recursive: true });
-      fs.writeFileSync(CMDB_PERSIST_FILE, JSON.stringify(store, null, 2), 'utf-8');
+      // Grava pelo store do CMDB: os tickets passam a aparecer em /cmdb/tickets
+      // e não são sobrescritos na próxima gravação do CMDB
+      replaceCmdbTicketsForTenant(tenantId, updatedTickets);
     } catch (err) {
       console.error('[SecurityBridge] Falha ao persistir tickets do CMDB', err);
     }

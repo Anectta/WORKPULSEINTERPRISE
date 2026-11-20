@@ -296,27 +296,36 @@ export const AssetManagement: React.FC<AssetManagementProps> = ({
   };
 
   // Lifecycle Stage Transition Handler
+  // Assinatura alinhada a AssetTransitionModal.onSaveTransition
   const handleSaveTransition = (
     assetId: string,
     toStage: AssetLifecycleStage,
-    notes?: string,
-    reason?: string,
-    technician?: string
+    date: string,
+    description: string,
+    user: string,
+    cost?: number,
+    newAssignedEmployeeId?: string,
+    newRoomName?: string
   ) => {
-    const todayStr = new Date().toISOString().split('T')[0];
+    const eventDate = date || new Date().toISOString().split('T')[0];
+    const newEmployee = newAssignedEmployeeId ? employees.find(e => e.id === newAssignedEmployeeId) : undefined;
+    const newRoom = newRoomName ? rooms.find(r => r.name === newRoomName) : undefined;
 
     setAssets(prev => prev.map(a => {
       if (a.id === assetId) {
         const oldStage = a.lifecycleStage || 'utilizacao';
         const newHistoryEvent: AssetHistoryEvent = {
           id: `hist-${Date.now()}`,
-          date: todayStr,
+          date: eventDate,
           type: 'transicao_ciclo',
           fromStage: oldStage,
           toStage,
           title: `Transição de Ciclo: ${oldStage.toUpperCase()} → ${toStage.toUpperCase()}`,
-          description: notes || `Ativo avançou no ciclo de vida (${reason || 'Rotina operacional'}).`,
-          performedBy: technician || 'Suporte de TI WorkPulse'
+          description: description || 'Ativo avançou no ciclo de vida (rotina operacional).',
+          performedBy: user || 'Suporte de TI WorkPulse',
+          cost,
+          location: newRoomName,
+          responsible: newEmployee?.name
         };
 
         let newStatus: AssetStatus = a.status;
@@ -329,7 +338,14 @@ export const AssetManagement: React.FC<AssetManagementProps> = ({
           ...a,
           lifecycleStage: toStage,
           status: newStatus,
-          history: [newHistoryEvent, ...(a.history || [])]
+          history: [newHistoryEvent, ...(a.history || [])],
+          ...(cost ? { totalMaintenanceCost: (a.totalMaintenanceCost || 0) + cost } : {}),
+          ...(newEmployee ? {
+            assignedEmployeeId: newEmployee.id,
+            assignedEmployeeName: newEmployee.name,
+            assignedDepartment: newEmployee.department
+          } : {}),
+          ...(newRoomName ? { roomName: newRoomName, roomId: newRoom?.id ?? a.roomId } : {})
         };
 
         if (selectedDetailAsset && selectedDetailAsset.id === assetId) {
@@ -825,8 +841,9 @@ export const AssetManagement: React.FC<AssetManagementProps> = ({
           {/* CICLO DE VIDA INTERATIVO (8 ETAPAS) */}
           <AssetLifecycleStepper
             assets={assets}
-            selectedStage={lifecycleFilter}
-            onSelectStage={setLifecycleFilter}
+            selectedStageFilter={lifecycleFilter}
+            onSelectStageFilter={setLifecycleFilter}
+            onQuickTransition={(asset) => setSelectedTransitionAsset(asset)}
           />
 
           {/* SEARCH & MULTI-FILTER BAR */}
@@ -1131,8 +1148,6 @@ export const AssetManagement: React.FC<AssetManagementProps> = ({
           assets={assets}
           onOpenDetail={(asset) => setSelectedDetailAsset(asset)}
           onOpenTransition={(asset) => setSelectedTransitionAsset(asset)}
-          onOpenCustodyTerm={(asset) => setSelectedCustodyAsset(asset)}
-          onOpenEdit={(asset) => setEditingAsset(asset)}
         />
       )}
 
@@ -1160,7 +1175,7 @@ export const AssetManagement: React.FC<AssetManagementProps> = ({
       {activeSubTab === 'contracts' && (
         <AssetContractsView
           assets={assets}
-          onOpenAssetDetail={(asset) => setSelectedDetailAsset(asset)}
+          onOpenDetail={(asset) => setSelectedDetailAsset(asset)}
           onOpenCustodyTerm={(asset) => setSelectedCustodyAsset(asset)}
         />
       )}
@@ -1334,14 +1349,14 @@ export const AssetManagement: React.FC<AssetManagementProps> = ({
           onClose={() => setSelectedDetailAsset(null)}
           onOpenTransition={(asset) => setSelectedTransitionAsset(asset)}
           onOpenCustodyTerm={(asset) => setSelectedCustodyAsset(asset)}
-          onOpenMaintenance={(asset) => {
+          onOpenNewMaintenance={(asset) => {
             setMaintenanceInitialAsset(asset);
             setMaintenanceToEdit(undefined);
             setIsMaintenanceModalOpen(true);
           }}
-          onOpenEdit={(asset) => setEditingAsset(asset)}
+          onEdit={(asset) => setEditingAsset(asset)}
+          onOpenTagPrint={(asset) => setSelectedTagAsset(asset)}
           onAddHistoryEvent={handleAddHistoryEvent}
-          onNavigateToTopology={onNavigateToTopology}
         />
       )}
 
@@ -1351,6 +1366,8 @@ export const AssetManagement: React.FC<AssetManagementProps> = ({
       {selectedTransitionAsset && (
         <AssetTransitionModal
           asset={selectedTransitionAsset}
+          employees={employees}
+          rooms={rooms}
           onClose={() => setSelectedTransitionAsset(null)}
           onSaveTransition={handleSaveTransition}
         />
@@ -1363,7 +1380,7 @@ export const AssetManagement: React.FC<AssetManagementProps> = ({
         <AssetCustodyTermModal
           asset={selectedCustodyAsset}
           onClose={() => setSelectedCustodyAsset(null)}
-          onConfirmTerm={handleConfirmCustodyTerm}
+          onConfirmSigned={handleConfirmCustodyTerm}
         />
       )}
 
@@ -1374,13 +1391,13 @@ export const AssetManagement: React.FC<AssetManagementProps> = ({
         <AssetMaintenanceModal
           assets={assets}
           initialAsset={maintenanceInitialAsset}
-          recordToEdit={maintenanceToEdit}
+          maintenanceToEdit={maintenanceToEdit}
           onClose={() => {
             setIsMaintenanceModalOpen(false);
             setMaintenanceToEdit(undefined);
             setMaintenanceInitialAsset(undefined);
           }}
-          onSave={handleSaveMaintenance}
+          onSaveMaintenance={handleSaveMaintenance}
         />
       )}
 

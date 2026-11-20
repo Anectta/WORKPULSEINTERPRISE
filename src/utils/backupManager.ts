@@ -27,6 +27,7 @@ import {
   SYSTEM_USERS 
 } from '../data/mockData';
 import { INITIAL_IT_ASSETS } from '../data/initialAssets';
+import { stripPasswords } from './userSanitizer';
 import { INITIAL_SUPPLIERS, INITIAL_ROOMS_ITAM, INITIAL_CATEGORIES, INITIAL_STATUSES } from '../data/auxiliaryData';
 
 export const BACKUP_STORAGE_KEYS = {
@@ -82,7 +83,8 @@ export function generateBackupPayload(currentUser?: CurrentUser): WorkPulseBacku
   const auxRooms: EnvironmentRoomItem[] = safeParse('wp_aux_rooms', INITIAL_ROOMS_ITAM);
   const customCategories: CustomCategoryItem[] = safeParse('wp_custom_categories', INITIAL_CATEGORIES);
   const customStatuses: CustomStatusItem[] = safeParse('wp_custom_statuses', INITIAL_STATUSES);
-  const systemUsers: CurrentUser[] = safeParse('wp_users_list_v2', SYSTEM_USERS);
+  // Senhas nunca entram no backup
+  const systemUsers = stripPasswords(safeParse('wp_users_list_v2', SYSTEM_USERS)) as CurrentUser[];
   
   const rbacMatrix = safeParse('wp_rbac_matrix_v2', safeParse('wp_rbac_matrix_v1', null));
   const departments = safeParse('applet_workpulse_departments', null);
@@ -435,9 +437,10 @@ export function restoreBackupPayload(
       localStorage.setItem('wp_custom_statuses', JSON.stringify(data.customStatuses));
     }
     if (Array.isArray(data.systemUsers)) {
-      localStorage.setItem('wp_users_list_v1', JSON.stringify(data.systemUsers));
-      if (data.systemUsers.length > 0) {
-        localStorage.setItem('wp_currentUser', JSON.stringify(data.systemUsers[0]));
+      const sanitizedUsers = stripPasswords(data.systemUsers);
+      localStorage.setItem('wp_users_list_v1', JSON.stringify(sanitizedUsers));
+      if (sanitizedUsers.length > 0) {
+        localStorage.setItem('wp_currentUser', JSON.stringify(sanitizedUsers[0]));
       }
     }
     if (data.rbacMatrix) {

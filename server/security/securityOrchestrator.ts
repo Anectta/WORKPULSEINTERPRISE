@@ -38,6 +38,8 @@ import {
 import { PentestControlPlane } from './pentestControlPlane';
 import { TargetValidator } from './targetValidator';
 import { FindingProcessor } from './findingProcessor';
+import { readJsonFile, writeJsonFileAtomic } from '../persistence/jsonFileStore';
+import { dataFile } from '../persistence/dataDir';
 import { SecurityEngine } from './securityEngine';
 import { RemediationEngine } from './remediationEngine';
 import { HardeningEngine } from './hardeningEngine';
@@ -45,7 +47,7 @@ import { RetestEngine } from './retestEngine';
 import { ComplianceEngine } from './complianceEngine';
 import { ReportEngine } from './reportEngine';
 
-const PERSISTED_FILE = path.join(process.cwd(), 'src', 'data', 'security_persisted.json');
+const PERSISTED_FILE = dataFile('security_persisted.json');
 
 interface SecurityStoreData {
   scopes: SecurityScope[];
@@ -77,9 +79,9 @@ export class SecurityOrchestrator {
 
   private static loadStore(): SecurityStoreData {
     try {
-      if (fs.existsSync(PERSISTED_FILE)) {
-        const raw = fs.readFileSync(PERSISTED_FILE, 'utf-8');
-        const parsed = JSON.parse(raw);
+      const result = readJsonFile<any>(PERSISTED_FILE);
+      if (result.status === 'ok') {
+        const parsed = result.data;
         return {
           scopes: parsed.scopes || [],
           policies: parsed.policies || [],
@@ -111,44 +113,46 @@ export class SecurityOrchestrator {
     return initial;
   }
 
-  private static saveStore(data?: any) {
+  /**
+   * Grava as chaves das quais o orquestrador é dono. As chaves do Pentest Control
+   * Plane (pentestProjects, authorizations, rulesOfEngagement, testProfiles,
+   * executionPlans) são preservadas como estão no arquivo.
+   */
+  private static saveStore(data?: SecurityStoreData) {
+    // Na carga inicial this.store ainda não existe: usa os dados recebidos
+    const source: SecurityStoreData = data ?? this.store;
     try {
-      let existing: any = {};
-      if (fs.existsSync(PERSISTED_FILE)) {
-        try {
-          existing = JSON.parse(fs.readFileSync(PERSISTED_FILE, 'utf-8'));
-        } catch (e) {}
-      }
+      const current = readJsonFile<any>(PERSISTED_FILE);
+      const existing: any = current.status === 'ok' ? current.data : {};
       const toSave = {
         ...existing,
-        scopes: this.store.scopes,
-        policies: this.store.policies,
-        targets: this.store.targets,
-        scans: this.store.scans,
-        findings: this.store.findings,
-        evidence: this.store.evidence,
-        retests: this.store.retests,
-        auditLogs: this.store.auditLogs,
-        remediations: this.store.remediations,
-        acceptedRisks: this.store.acceptedRisks,
-        riskExceptions: this.store.riskExceptions,
-        retestComparisons: this.store.retestComparisons,
-        complianceEvaluations: this.store.complianceEvaluations,
-        riskHistories: this.store.riskHistories,
-        reports: this.store.reports,
-        complianceControls: this.store.complianceControls,
-        securityScoreHistory: this.store.securityScoreHistory,
-        scheduledReports: this.store.scheduledReports,
-        alertRules: this.store.alertRules,
-        shareTokens: this.store.shareTokens,
+        scopes: source.scopes,
+        policies: source.policies,
+        targets: source.targets,
+        scans: source.scans,
+        findings: source.findings,
+        evidence: source.evidence,
+        retests: source.retests,
+        auditLogs: source.auditLogs,
+        remediations: source.remediations,
+        acceptedRisks: source.acceptedRisks,
+        riskExceptions: source.riskExceptions,
+        retestComparisons: source.retestComparisons,
+        complianceEvaluations: source.complianceEvaluations,
+        riskHistories: source.riskHistories,
+        reports: source.reports,
+        complianceControls: source.complianceControls,
+        securityScoreHistory: source.securityScoreHistory,
+        scheduledReports: source.scheduledReports,
+        alertRules: source.alertRules,
+        shareTokens: source.shareTokens,
         pentestProjects: existing.pentestProjects || [],
         authorizations: existing.authorizations || [],
         rulesOfEngagement: existing.rulesOfEngagement || [],
         testProfiles: existing.testProfiles || [],
         executionPlans: existing.executionPlans || []
       };
-      fs.mkdirSync(path.dirname(PERSISTED_FILE), { recursive: true });
-      fs.writeFileSync(PERSISTED_FILE, JSON.stringify(toSave, null, 2), 'utf-8');
+      writeJsonFileAtomic(PERSISTED_FILE, toSave);
     } catch (e) {
       console.error('Erro ao persistir dados de segurança:', e);
     }
@@ -761,6 +765,44 @@ export class SecurityOrchestrator {
       alertRules: initialAlertRules,
       shareTokens: []
     };
+  }
+
+  /**
+   * Recebe os achados produzidos pelo Pentest Runner. O orquestrador é o único dono
+   * de findings/evidence: assim os achados entram no cache em memória (dashboards,
+   * remediação, compliance, relatórios) e não são sobrescritos na próxima gravação.
+   */
+  static ingestPentestResults(
+    pentestId: string,
+    items: Array<{ rawFinding: any; evidenceType?: string; evidencePayload?: string }>
+  ): { critical: number; high: number; medium: number; low: number; info: number } {
+    const counts = { critical: 0, high: 0, medium: 0, low: 0, info: 0 };
+
+    for (const item of items) {
+      this.findingCounter++;
+      item.rawFinding.pentestId = pentestId;
+      item.rawFinding.evidence = {
+        title: `Evidência de Execução Pentest - ${item.rawFinding.title}`,
+        evidenceType: item.evidenceType || 'HTTP_EXCHANGE',
+        rawPayload: item.evidencePayload || 'No payload recorded'
+      };
+      const processed = FindingProcessor.processFinding(item.rawFinding, this.store.findings, this.findingCounter);
+
+      if (!processed.isDuplicate) {
+        this.store.findings.unshift(processed.finding);
+      }
+      this.store.evidence.unshift(processed.evidence);
+
+      const sev = processed.finding.severity;
+      if (sev === 'CRITICAL') counts.critical++;
+      else if (sev === 'HIGH') counts.high++;
+      else if (sev === 'MEDIUM') counts.medium++;
+      else if (sev === 'LOW') counts.low++;
+      else counts.info++;
+    }
+
+    this.saveStore();
+    return counts;
   }
 
   /**

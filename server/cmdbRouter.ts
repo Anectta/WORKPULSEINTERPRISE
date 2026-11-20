@@ -44,10 +44,12 @@ import {
 } from "../src/types/cmdb";
 import { InventoryDiffEngine } from "../src/utils/inventoryDiffEngine";
 import { NetworkScannerService } from "./networkScannerService";
+import { readJsonFile, writeJsonFileAtomic } from "./persistence/jsonFileStore";
 
 const router = Router();
 
-const DATA_DIR = path.join(process.cwd(), "src", "data");
+import { DATA_DIR } from "./persistence/dataDir";
+import { getIndividualPsScript } from "../src/utils/installerScripts";
 const CMDB_PERSIST_FILE = path.join(DATA_DIR, "cmdb_persisted.json");
 
 export interface CMDBStore {
@@ -493,38 +495,48 @@ function seedInitialPrompt7DiscoveredDevices(): DiscoveredDevice[] {
   ];
 }
 
-const DEFAULT_LEGACY_TOKEN = "wp-prod-token-994821a8-8f82-4e89-a212-32b220199211";
-const DEMO_ENROLLMENT_TOKEN = "enr_demo_sec_2026_q3";
+/**
+ * Hashes SHA-256 de enrollment tokens que ficaram expostos no código-fonte e no
+ * bundle do front-end. São revogados automaticamente ao carregar o store.
+ */
+const COMPROMISED_ENROLLMENT_TOKEN_HASHES = new Set([
+  "245e6650e1100707f43e51dd189cd83eab4514b72b282225cf59b3f6f81a9fef",
+  "029bc8e5b94117084471889280b0e14b1c5081b4363fe3be0b056092bad9050a"
+]);
+
+/** Token de implantação em massa (GPO/AD) definido apenas por variável de ambiente. */
+function getLegacyEnrollmentToken(): string | null {
+  const token = (process.env.AGENT_LEGACY_ENROLLMENT_TOKEN || "").trim();
+  return token.length >= 24 ? token : null;
+}
 
 function seedInitialEnrollmentTokens(): AgentEnrollmentToken[] {
+  const legacyToken = getLegacyEnrollmentToken();
+  if (!legacyToken) return [];
   return [
     {
       id: "enr-legacy-gpo",
       tenantId: "tenant-demo",
       name: "Token Padrão de Implantação (GPO / AD / Script)",
-      tokenPrefix: "wp-prod-token...",
-      tokenHash: sha256(DEFAULT_LEGACY_TOKEN),
+      tokenPrefix: legacyToken.substring(0, 8) + "...",
+      tokenHash: sha256(legacyToken),
       maxUses: 1000,
-      currentUses: 148,
+      currentUses: 0,
       status: "active",
-      expiresAt: "2027-12-31T23:59:59.000Z",
-      createdBy: "admin@workpulse.io",
-      createdAt: "2026-01-01T00:00:00.000Z"
-    },
-    {
-      id: "enr-temporary-rollout",
-      tenantId: "tenant-demo",
-      name: "Token Temporário de Rollout (Expira em 7 dias)",
-      tokenPrefix: "enr_demo_sec...",
-      tokenHash: sha256(DEMO_ENROLLMENT_TOKEN),
-      maxUses: 50,
-      currentUses: 5,
-      status: "active",
-      expiresAt: new Date(Date.now() + 7 * 86400000).toISOString(),
-      createdBy: "Carlos Amoroso (Administrador)",
+      expiresAt: new Date(Date.now() + 90 * 86400000).toISOString(),
+      createdBy: "Configuração do servidor (AGENT_LEGACY_ENROLLMENT_TOKEN)",
       createdAt: new Date().toISOString()
     }
   ];
+}
+
+/** Revoga tokens comprometidos que ainda estejam ativos no store persistido. */
+export function revokeCompromisedEnrollmentTokens(tokens: AgentEnrollmentToken[]): AgentEnrollmentToken[] {
+  return tokens.map(t =>
+    COMPROMISED_ENROLLMENT_TOKEN_HASHES.has(t.tokenHash) && t.status === "active"
+      ? { ...t, status: "revoked" as AgentEnrollmentToken["status"] }
+      : t
+  );
 }
 
 function migrateExistingCisToIdentities(items: ConfigurationItem[]): AgentDeviceIdentity[] {
@@ -735,14 +747,17 @@ function seedInitialInventorySnapshots(): DeviceInventorySnapshot[] {
 
 function loadStore(): CMDBStore {
   try {
-    if (fs.existsSync(CMDB_PERSIST_FILE)) {
-      const raw = fs.readFileSync(CMDB_PERSIST_FILE, "utf-8");
-      const parsed = JSON.parse(raw);
-      
+    // Leitura tolerante: usa o .bak se o arquivo estiver corrompido e coloca o
+    // arquivo irrecuperável em quarentena (nunca é sobrescrito silenciosamente)
+    const result = readJsonFile<any>(CMDB_PERSIST_FILE);
+    if (result.status === "ok") {
+      const parsed = result.data;
+
       // Auto-migrate if new identity arrays are missing
       if (!parsed.enrollmentTokens || parsed.enrollmentTokens.length === 0) {
         parsed.enrollmentTokens = seedInitialEnrollmentTokens();
       }
+      parsed.enrollmentTokens = revokeCompromisedEnrollmentTokens(parsed.enrollmentTokens);
       if (!parsed.agentIdentities || parsed.agentIdentities.length === 0) {
         parsed.agentIdentities = migrateExistingCisToIdentities(parsed.items || []);
       }
@@ -843,15 +858,29 @@ function loadStore(): CMDBStore {
 
 function saveStore(store: CMDBStore): void {
   try {
-    fs.mkdirSync(path.dirname(CMDB_PERSIST_FILE), { recursive: true });
-    fs.writeFileSync(CMDB_PERSIST_FILE, JSON.stringify(store, null, 2), "utf-8");
+    writeJsonFileAtomic(CMDB_PERSIST_FILE, store);
   } catch (err) {
     console.error("[CMDB Store] Failed to save CMDB store:", err);
   }
 }
 
-// In-memory runtime cache
+// In-memory runtime cache — único dono do arquivo cmdb_persisted.json
 let store: CMDBStore = loadStore();
+
+/**
+ * Acesso de outros módulos do servidor (ex.: SecurityIntegrationBridge) ao store
+ * do CMDB. Toda gravação passa pelo cache em memória, evitando que um módulo
+ * sobrescreva as alterações do outro.
+ */
+export function getCmdbStoreSnapshot(): CMDBStore {
+  return store;
+}
+
+export function replaceCmdbTicketsForTenant(tenantId: string, tenantTickets: CMDBStore["tickets"]): void {
+  const others = (store.tickets || []).filter(t => t.tenantId !== tenantId);
+  store.tickets = [...others, ...tenantTickets];
+  saveStore(store);
+}
 
 // Rate limiting in-memory bucket map
 interface RateLimitBucket {
@@ -903,6 +932,11 @@ function logAgentAudit(
 
 // Helper to extract tenant ID
 function getTenantId(req: Request): string {
+  // Tenant fixo do usuário autenticado (app_metadata.tenant_id) tem precedência
+  if (req.authUser?.tenantId) return req.authUser.tenantId;
+  // Agente autenticado só opera no próprio tenant
+  const agentIdentity = (req as any).agentIdentity as { tenantId?: string } | undefined;
+  if (agentIdentity?.tenantId) return agentIdentity.tenantId;
   const headerTenant = req.headers["x-tenant-id"] as string;
   const queryTenant = req.query.tenantId as string;
   return headerTenant || queryTenant || "tenant-demo";
@@ -910,6 +944,11 @@ function getTenantId(req: Request): string {
 
 // Authentication & Security Middleware for Agents
 function authenticateAgent(req: Request, res: Response, next: () => void) {
+  // Usuário autenticado no painel (JWT Supabase validado em apiAuthentication)
+  if (req.authUser) {
+    return next();
+  }
+
   let rawToken = "";
   const authHeader = req.headers["authorization"];
   if (authHeader && authHeader.startsWith("Bearer ")) {
@@ -968,11 +1007,27 @@ function authenticateAgent(req: Request, res: Response, next: () => void) {
     return next();
   }
 
-  // Backwards compatibility fallback for older agents:
-  // If legacy agent has not yet enrolled, permit request but add upgrade header
-  res.setHeader("x-agent-auth", "legacy-unauthenticated");
-  res.setHeader("x-agent-upgrade-required", "true");
-  return next();
+  // Compatibilidade com agentes antigos sem token: desativada por padrão.
+  // Só habilite (AGENT_ALLOW_LEGACY_UNAUTHENTICATED=true) durante uma migração controlada.
+  if (process.env.AGENT_ALLOW_LEGACY_UNAUTHENTICATED === "true") {
+    res.setHeader("x-agent-auth", "legacy-unauthenticated");
+    res.setHeader("x-agent-upgrade-required", "true");
+    return next();
+  }
+
+  logAgentAudit(
+    getTenantId(req),
+    agentIdHeader || null,
+    null,
+    "AUTH_FAILED",
+    clientIp,
+    "Requisição de agente sem token de identidade recusada."
+  );
+  return res.status(401).json({
+    error: "UNAUTHORIZED_AGENT",
+    message: "Token de identidade do agente ausente. Realize o enrollment com um Enrollment Token válido.",
+    code: "AGENT_TOKEN_MISSING"
+  });
 }
 
 // Helper to log an audit event
@@ -1847,8 +1902,9 @@ const handleEnrollment = (req: Request, res: Response) => {
   const tokenHash = sha256(suppliedToken);
   let matchedEnrollmentToken = (store.enrollmentTokens || []).find(t => t.tokenHash === tokenHash);
 
-  // Fallback for legacy default token
-  if (!matchedEnrollmentToken && suppliedToken === DEFAULT_LEGACY_TOKEN) {
+  // Token de implantação em massa configurado no servidor (AGENT_LEGACY_ENROLLMENT_TOKEN)
+  const legacyToken = getLegacyEnrollmentToken();
+  if (!matchedEnrollmentToken && legacyToken && suppliedToken === legacyToken) {
     matchedEnrollmentToken = (store.enrollmentTokens || []).find(t => t.id === "enr-legacy-gpo");
   }
 
@@ -2057,6 +2113,32 @@ const handleEnrollment = (req: Request, res: Response) => {
 };
 
 router.post("/agent/enroll", handleEnrollment);
+
+// GET /api/v1/agent/install.ps1?token=...&dept=... — instalador PowerShell usado pelo .BAT
+// Público (a estação ainda não tem identidade), mas só responde para enrollment token ativo.
+router.get("/agent/install.ps1", (req: Request, res: Response) => {
+  const token = String(req.query.token || "").trim();
+  const dept = String(req.query.dept || "Geral").slice(0, 120);
+  const clientIp = (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || req.socket.remoteAddress || "127.0.0.1";
+
+  if (!checkRateLimit(`install:${clientIp}`, 30, 60)) {
+    return res.status(429).type("text/plain").send("# Muitas requisicoes. Aguarde 60 segundos.");
+  }
+
+  const tokenHash = token ? sha256(token) : "";
+  const legacyToken = getLegacyEnrollmentToken();
+  const valid = (store.enrollmentTokens || []).some(t =>
+    t.status === "active" &&
+    new Date(t.expiresAt).getTime() > Date.now() &&
+    (t.tokenHash === tokenHash || (legacyToken !== null && token === legacyToken && t.id === "enr-legacy-gpo"))
+  );
+  if (!valid) {
+    return res.status(404).type("text/plain").send("Write-Error 'Enrollment token invalido, expirado ou revogado.'; exit 1");
+  }
+
+  const serverUrl = process.env.PUBLIC_SERVER_URL || `${req.protocol}://${req.get("host")}`;
+  res.type("text/plain").send(getIndividualPsScript(token, serverUrl, dept, "Implantacao via instalador .BAT"));
+});
 router.post("/agent/register", handleEnrollment);
 
 // 7.3. SECURE HEARTBEAT

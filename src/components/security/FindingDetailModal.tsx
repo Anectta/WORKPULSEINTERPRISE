@@ -218,11 +218,6 @@ export const FindingDetailModal: React.FC<FindingDetailModalProps> = ({
                     {data.finding.cveId}
                   </span>
                 )}
-                {data?.finding.remediationPriority && (
-                  <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-800/40">
-                    Prioridade Calculada: {data.finding.remediationPriority}
-                  </span>
-                )}
               </div>
               <h2 className="text-base font-bold text-white tracking-tight mt-0.5">
                 {data?.finding.title || 'Carregando detalhes da vulnerabilidade...'}
@@ -271,7 +266,7 @@ export const FindingDetailModal: React.FC<FindingDetailModalProps> = ({
                     </span>
                   </div>
                   <p className="text-slate-300 leading-relaxed">
-                    {data.acceptedRisk?.justification || data.finding.riskAcceptanceJustification || 'Risco aceito com aprovação formal do CISO Corporativo.'}
+                    {data.acceptedRisk?.justification || 'Justificativa de aceite de risco não registrada.'}
                   </p>
                   {data.acceptedRisk?.compensatoryControls && data.acceptedRisk.compensatoryControls.length > 0 && (
                     <div className="pt-1">

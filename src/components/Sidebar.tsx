@@ -251,60 +251,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       </div>
                     </div>
 
-                    {/* Switcher */}
-                    <div className="py-3 space-y-2">
-                      <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider font-mono">
-                        <span>Trocar Usuário (Simular)</span>
-                        <UserCheck className="w-3.5 h-3.5 text-slate-500" />
-                      </div>
-
-                      <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
-                        {availableUsers.map((user) => {
-                          const isActive = user.id === currentUser.id;
-                          return (
-                            <button
-                              key={user.id}
-                              onClick={() => {
-                                setCurrentUser?.(user);
-                                setIsProfileDropdownOpen(false);
-                              }}
-                              className={`w-full flex items-center justify-between p-2 rounded-xl text-left text-xs transition-all ${
-                                isActive 
-                                  ? 'bg-blue-950/80 text-blue-200 border border-blue-800 font-bold' 
-                                  : 'hover:bg-slate-800/80 text-slate-300 border border-transparent'
-                              }`}
-                            >
-                              <div className="flex items-center space-x-2.5 min-w-0">
-                                <img 
-                                  src={user.avatar} 
-                                  alt={user.name} 
-                                  className="w-7 h-7 rounded-lg object-cover shrink-0 border border-slate-700"
-                                />
-                                <div className="min-w-0">
-                                  <p className="font-bold text-slate-200 truncate text-[12px] leading-tight">
-                                    {user.name}
-                                  </p>
-                                  <p className="text-[10px] text-slate-400 truncate leading-tight mt-0.5">
-                                    {user.role}
-                                  </p>
-                                </div>
-                              </div>
-
-                              <div className="flex items-center space-x-1.5 shrink-0 pl-2">
-                                <span className={`px-1.5 py-0.5 rounded text-[9px] font-black font-mono border ${
-                                  isActive 
-                                    ? 'bg-blue-600 text-white border-blue-600' 
-                                    : 'bg-slate-800 text-slate-400 border-slate-700'
-                                }`}>
-                                  {user.accessLevel}
-                                </span>
-                                {isActive && <Check className="w-3.5 h-3.5 text-blue-400 shrink-0" />}
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
+                    {/* Troca de usuário sem senha removida (auditoria 2026-11-20): a identidade vem da sessão do Supabase Auth */}
 
                     {/* Footer Actions */}
                     <div className="pt-2.5 space-y-2 text-xs">
@@ -333,11 +280,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         <button
                           onClick={() => {
                             setIsProfileDropdownOpen(false);
-                            if (onSignOut) {
-                              onSignOut();
-                            } else if (availableUsers[0]) {
-                              setCurrentUser?.(availableUsers[0]);
-                            }
+                            onSignOut?.();
                           }}
                           className="py-1.5 px-3 bg-red-950/60 hover:bg-red-900/60 text-red-300 font-bold rounded-xl text-center transition-colors flex items-center space-x-1 text-[11px] border border-red-800 cursor-pointer"
                         >

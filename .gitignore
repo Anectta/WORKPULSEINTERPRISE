@@ -52,3 +52,8 @@ src-tauri/target/
 supabase/.temp/
 
 
+
+# Persistência do servidor (auditoria 2026-11-20): cópias, temporários e quarentena
+src/data/*.bak
+src/data/*.tmp
+src/data/*.corrupt-*

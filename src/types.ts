@@ -308,7 +308,7 @@ export interface ITAsset {
 
   // Garantia
   warrantyExpiry: string; // YYYY-MM-DD
-  warrantyType?: 'On-Site Fabricante' | 'Balcão / Carry-in' | 'SLA 4h 24x7' | 'Garantia Estendida' | 'Nenhuma';
+  warrantyType?: 'On-Site Fabricante' | 'Balcão / Carry-in' | 'SLA 4h 24x7' | 'Garantia Estendida' | 'Nenhuma' | (string & {}); // texto livre no cadastro
   warrantySla?: string;
   warrantySlaHours?: number;
   warrantyNotes?: string;

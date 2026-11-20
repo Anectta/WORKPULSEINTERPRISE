@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { Employee } from '../types';
 import { TabType } from './Sidebar';
+import { DemoNotice } from './DemoNotice';
 
 export interface StationAgentData {
   id: string;
@@ -90,7 +91,7 @@ export const SilentAgentFleetModal: React.FC<SilentAgentFleetModalProps> = ({
     employees.forEach((emp, index) => {
       generated.push({
         id: `station-${index + 1}`,
-        hostname: emp.pcHostName || `PC-${emp.department.substring(0, 3).toUpperCase()}-${String(index + 1).padStart(3, '0')}`,
+        hostname: emp.computerHost || `PC-${emp.department.substring(0, 3).toUpperCase()}-${String(index + 1).padStart(3, '0')}`,
         employeeName: emp.name,
         department: emp.department,
         ip: `192.168.1.${10 + index}`,
@@ -261,6 +262,9 @@ export const SilentAgentFleetModal: React.FC<SilentAgentFleetModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-3 sm:p-6 animate-fadeIn overflow-y-auto font-sans">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-6xl w-full max-h-[92vh] flex flex-col shadow-2xl text-slate-900 dark:text-slate-100 relative overflow-hidden">
+        <DemoNotice className="m-4 mb-0">
+          a frota, os status de agentes, as ações remotas e os KPIs desta central são simulados no navegador. Nenhum comando é enviado a estações reais e o pacote MSI exibido não existe.
+        </DemoNotice>
         
         {/* Toast Notification Banner inside Modal */}
         {toastMessage && (

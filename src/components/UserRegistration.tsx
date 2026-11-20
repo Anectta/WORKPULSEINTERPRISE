@@ -55,6 +55,11 @@ import {
   Database
 } from 'lucide-react';
 import { CurrentUser, Department } from '../types';
+import { stripPasswords } from '../utils/userSanitizer';
+import { supabase } from '../lib/supabaseClient';
+import { useSupabaseCollectionSync } from '../hooks/useSupabaseCollectionSync';
+import { appendAuditLogs, fetchAuditLogs } from '../services/supabase/documents.service';
+import { DemoNotice } from './DemoNotice';
 
 interface UserRegistrationProps {
   currentUser: CurrentUser;
@@ -283,6 +288,27 @@ export const UserRegistration: React.FC<UserRegistrationProps> = ({
 
   // Audit Logs State
   const [auditLogs, setAuditLogs] = useState(INITIAL_AUDIT_LOGS);
+  // Trilha de auditoria persistida no Supabase (app_audit_logs: somente inserção).
+  // Ao carregar com sucesso, os eventos de exemplo são substituídos pelos registros reais.
+  const [auditSyncReady, setAuditSyncReady] = useState(false);
+  const auditSync = useSupabaseCollectionSync(auditLogs as Array<{ id: string }>, {
+    label: 'trilha de auditoria',
+    enabled: auditSyncReady,
+    upsertMany: (entries) => appendAuditLogs(entries),
+    // Registros de auditoria nunca são apagados
+    remove: async () => true,
+  });
+  useEffect(() => {
+    let active = true;
+    fetchAuditLogs<any>().then(remote => {
+      if (!active || remote === null) return;
+      setAuditLogs(remote as typeof INITIAL_AUDIT_LOGS);
+      auditSync.resetBaseline(remote);
+      setAuditSyncReady(true);
+    });
+    return () => { active = false; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [auditSearch, setAuditSearch] = useState('');
   const [auditSeverityFilter, setAuditSeverityFilter] = useState<string>('Todas');
 
@@ -326,17 +352,15 @@ export const UserRegistration: React.FC<UserRegistrationProps> = ({
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) return stripPasswords(parsed) as CurrentUser[];
       } catch (e) {}
     }
-    return availableUsers.map((u, idx) => ({
-      ...u,
-      password: u.password || (idx === 0 ? 'Admin@WorkPulse2026!' : `WorkPulse@${2026 + idx}`)
-    }));
+    return stripPasswords(availableUsers) as CurrentUser[];
   });
 
   useEffect(() => {
-    localStorage.setItem('wp_users_list_v1', JSON.stringify(usersList));
+    // Senhas nunca são persistidas no navegador (autenticação via Supabase Auth)
+    localStorage.setItem('wp_users_list_v1', JSON.stringify(stripPasswords(usersList)));
   }, [usersList]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAccessFilter, setSelectedAccessFilter] = useState<string>('Todos');
@@ -396,7 +420,7 @@ export const UserRegistration: React.FC<UserRegistrationProps> = ({
       if (onUpdateUsersList) onUpdateUsersList(updated);
 
       const newLog = {
-        id: `log-${Date.now().toString().slice(-4)}`,
+        id: `log-${crypto.randomUUID()}`,
         timestamp: new Date().toLocaleString('pt-BR'),
         actorName: currentUser.name,
         actorRole: currentUser.accessLevel,
@@ -458,7 +482,7 @@ export const UserRegistration: React.FC<UserRegistrationProps> = ({
     }
 
     const newLog = {
-      id: `log-${Date.now().toString().slice(-4)}`,
+      id: `log-${crypto.randomUUID()}`,
       timestamp: new Date().toLocaleString('pt-BR'),
       actorName: currentUser.name,
       actorRole: currentUser.accessLevel,
@@ -498,7 +522,7 @@ export const UserRegistration: React.FC<UserRegistrationProps> = ({
     }
 
     const newLog = {
-      id: `log-${Date.now().toString().slice(-4)}`,
+      id: `log-${crypto.randomUUID()}`,
       timestamp: new Date().toLocaleString('pt-BR'),
       actorName: currentUser.name,
       actorRole: currentUser.accessLevel,
@@ -620,7 +644,7 @@ export const UserRegistration: React.FC<UserRegistrationProps> = ({
       
       // Log to audit
       const newLog = {
-        id: `log-${Date.now().toString().slice(-4)}`,
+        id: `log-${crypto.randomUUID()}`,
         timestamp: new Date().toLocaleString('pt-BR'),
         actorName: currentUser.name,
         actorRole: currentUser.accessLevel,
@@ -766,9 +790,7 @@ export const UserRegistration: React.FC<UserRegistrationProps> = ({
   };
 
   const handleGenerateNewPassword = (user: CurrentUser) => {
-    const newPass = `WP#${Math.floor(100000 + Math.random() * 900000)}!`;
     setResetPassUser(user);
-    setGeneratedPassword(newPass);
   };
 
   // --- DEPARTMENTS CRUD HANDLERS ---
@@ -828,7 +850,7 @@ export const UserRegistration: React.FC<UserRegistrationProps> = ({
       localStorage.setItem('applet_workpulse_departments', JSON.stringify(updated));
 
       const auditLog = {
-        id: `log-${Date.now().toString().slice(-4)}`,
+        id: `log-${crypto.randomUUID()}`,
         timestamp: new Date().toLocaleString('pt-BR'),
         actorName: currentUser.name,
         actorRole: currentUser.accessLevel,
@@ -860,7 +882,7 @@ export const UserRegistration: React.FC<UserRegistrationProps> = ({
       localStorage.setItem('applet_workpulse_departments', JSON.stringify(updated));
 
       const auditLog = {
-        id: `log-${Date.now().toString().slice(-4)}`,
+        id: `log-${crypto.randomUUID()}`,
         timestamp: new Date().toLocaleString('pt-BR'),
         actorName: currentUser.name,
         actorRole: currentUser.accessLevel,
@@ -879,13 +901,13 @@ export const UserRegistration: React.FC<UserRegistrationProps> = ({
   };
 
   const handleToggleDeptStatus = (dept: DepartmentItem) => {
-    const newStatus = dept.status === 'Ativo' ? 'Inativo' : 'Ativo';
+    const newStatus: DepartmentItem['status'] = dept.status === 'Ativo' ? 'Inativo' : 'Ativo';
     const updated = departments.map(d => d.id === dept.id ? { ...d, status: newStatus } : d);
     setDepartments(updated);
     localStorage.setItem('applet_workpulse_departments', JSON.stringify(updated));
 
     const auditLog = {
-      id: `log-${Date.now().toString().slice(-4)}`,
+      id: `log-${crypto.randomUUID()}`,
       timestamp: new Date().toLocaleString('pt-BR'),
       actorName: currentUser.name,
       actorRole: currentUser.accessLevel,
@@ -908,7 +930,7 @@ export const UserRegistration: React.FC<UserRegistrationProps> = ({
     localStorage.setItem('applet_workpulse_departments', JSON.stringify(updated));
 
     const auditLog = {
-      id: `log-${Date.now().toString().slice(-4)}`,
+      id: `log-${crypto.randomUUID()}`,
       timestamp: new Date().toLocaleString('pt-BR'),
       actorName: currentUser.name,
       actorRole: currentUser.accessLevel,
@@ -1531,6 +1553,9 @@ export const UserRegistration: React.FC<UserRegistrationProps> = ({
                 <h3 className="text-base font-black text-slate-900 dark:text-slate-100 mt-1">
                   Dispositivos Conectados & Tokens JWT Ativos ({activeSessions.length})
                 </h3>
+                <DemoNotice className="mt-2">
+                  as sessões listadas são exemplos. As sessões reais são gerenciadas pelo Supabase Auth; para encerrar todas, use "Deslogar de todos os PCs".
+                </DemoNotice>
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                   Monitoramento contínuo de estações de trabalho e clientes agent/web em tempo real.
                 </p>
@@ -1769,6 +1794,11 @@ export const UserRegistration: React.FC<UserRegistrationProps> = ({
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                   Rastreabilidade completa das ações executadas por administradores, gestores e chamadas de API do sistema.
                 </p>
+                {!auditSyncReady && (
+                  <DemoNotice className="mt-2">
+                    o banco de dados não pôde ser lido; os eventos exibidos são exemplos locais. Quando conectada, a trilha é gravada no Supabase sem possibilidade de alteração ou exclusão.
+                  </DemoNotice>
+                )}
               </div>
 
               <div className="flex items-center space-x-2">
@@ -2476,29 +2506,27 @@ export const UserRegistration: React.FC<UserRegistrationProps> = ({
             </div>
 
             <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2 text-center">
-              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Nova Senha Temporária Gerada:</span>
-              <div className="text-lg font-mono font-black text-amber-700 dark:text-amber-400 tracking-wider bg-amber-50 dark:bg-amber-950/80 py-2 rounded-lg border border-amber-200/80 dark:border-amber-800">
-                {generatedPassword}
-              </div>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                O usuário precisará alterar esta senha no próximo login.
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Redefinição segura via Supabase Auth</span>
+              <p className="text-xs text-slate-600 dark:text-slate-300">
+                Um link de redefinição será enviado para <strong>{resetPassUser.email}</strong>.
+                A nova senha é definida pelo próprio usuário e nunca fica armazenada no WorkPulse.
               </p>
             </div>
 
             <div className="flex items-center justify-end space-x-2">
               <button
-                onClick={() => {
-                  navigator.clipboard.writeText(generatedPassword);
-                  if (resetPassUser) {
-                    const updated = usersList.map(u => 
-                      u.id === resetPassUser.id ? { ...u, password: generatedPassword } : u
-                    );
-                    setUsersList(updated);
-                    localStorage.setItem('wp_users_list_v1', JSON.stringify(updated));
-                    if (onUpdateUsersList) onUpdateUsersList(updated);
-                  }
-                  showToast('Nova senha copiada e atualizada para o usuário com sucesso!');
+                onClick={async () => {
+                  if (!resetPassUser) return;
+                  const target = resetPassUser;
                   setResetPassUser(null);
+                  const { error } = await supabase.auth.resetPasswordForEmail(target.email, {
+                    redirectTo: window.location.origin
+                  });
+                  if (error) {
+                    showToast(`Falha ao enviar redefinição para ${target.email}: ${error.message}`);
+                  } else {
+                    showToast(`Link de redefinição de senha enviado para ${target.email}.`);
+                  }
                 }}
                 className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center space-x-1.5 cursor-pointer"
               >

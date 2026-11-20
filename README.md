@@ -22,7 +22,7 @@ Database/Auth     SaaS Frontend/API
        ↕
  HTTPS / WebSocket
        ↕
-      Agent (Windows Service / Linux Daemon / Tauri Desktop)
+      Agent (Windows Service / Linux Daemon) — desktop Tauri não implementado, ver docs/desktop.md
        ↕
    Backup Engine (Streaming, ZSTD, AES-256-GCM, GFS)
        ↓
@@ -36,7 +36,7 @@ Database/Auth     SaaS Frontend/API
 | **Control Plane** | Frontend React 19, Tailwind CSS, Vite | **SIM** | Interface do usuário corporativa, dashboards e auditoria |
 | **Control Plane** | API / BFF Gateway (Node.js/Express) | **SIM** | Autenticação, autorização RBAC, rotas de controle e orquestração |
 | **Control Plane** | Supabase (PostgreSQL + RLS + Auth) | **NÃO (Supabase)** | Metadados, catálogo, políticas de jobs, logs de auditoria e RBAC |
-| **Data Plane** | Backup Agent (Daemon/Service/Tauri) | **NÃO (Local)** | Gestão de ciclo de vida, spooling offline, bridge IPC |
+| **Data Plane** | Backup Agent (Daemon/Service; sem control plane no servidor — ver docs/desktop.md) | **NÃO (Local)** | Gestão de ciclo de vida, spooling offline, bridge IPC |
 | **Data Plane** | Backup Engine (Core) | **NÃO (Local)** | Varredura de filesystem, ZSTD, cifra AES-256-GCM, GFS, Safe Delete |
 | **Data Plane** | Storage Providers (Local/SMB/SFTP/S3) | **NÃO (Local)** | Transporte direto de chunks para destinos locais ou em nuvem |
 

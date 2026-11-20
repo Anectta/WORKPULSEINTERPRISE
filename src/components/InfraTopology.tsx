@@ -85,6 +85,7 @@ import {
 } from 'lucide-react';
 import { CurrentUser, ITAsset } from '../types';
 import savedTopologyData from '../data/topology_saved.json';
+import { DemoNotice } from './DemoNotice';
 
 // ==========================================
 // DATA TYPES & INTERFACES
@@ -193,6 +194,7 @@ export const ASSET_CATEGORIES = [
 export interface TopologyNode {
   id: string;
   name: string;
+  activeOnMap?: boolean; // false = oculto no mapa (mesma semântica das salas)
   type: DeviceType;
   x: number;
   y: number;
@@ -1416,7 +1418,6 @@ export const InfraTopology: React.FC<InfraTopologyProps> = ({
 
   // Floating Toolbox State
   const [toolboxOpen, setToolboxOpen] = useState<boolean>(true);
-  const [activeToolboxTab, setActiveToolboxTab] = useState<'tools' | 'mappings' | 'discovery' | 'mapping' | 'rooms' | null>(null);
 
   // Dragging & Snapping Settings
   const [snapToGrid, setSnapToGrid] = useState<boolean>(true);
@@ -3087,7 +3088,7 @@ export const InfraTopology: React.FC<InfraTopologyProps> = ({
     }
 
     const targetRoom = rooms.find(r => 
-      r.category === 'server_room' || 
+      r.category === 'rack_room' || 
       r.category === 'datacenter' || 
       r.name.toLowerCase().includes('data') || 
       r.name.toLowerCase().includes('ti')
@@ -3145,7 +3146,7 @@ export const InfraTopology: React.FC<InfraTopologyProps> = ({
     let addedCount = 0;
     const newNodesToAdd: TopologyNode[] = [];
     const targetRoom = rooms.find(r => 
-      r.category === 'server_room' || 
+      r.category === 'rack_room' || 
       r.category === 'datacenter' || 
       r.name.toLowerCase().includes('data') || 
       r.name.toLowerCase().includes('ti')
@@ -3649,8 +3650,6 @@ export const InfraTopology: React.FC<InfraTopologyProps> = ({
                   showQuadrantGuides={showQuadrantGuides}
                   toolboxOpen={toolboxOpen}
                   onToggleToolbox={() => setToolboxOpen(prev => !prev)}
-                  activeToolboxTab={activeToolboxTab}
-                  onSetActiveToolboxTab={setActiveToolboxTab}
                   onAddEquipment={handleAddEquipment}
                   onOpenAddRoom={() => setEditingRoom({ activeOnMap: true, uplinkSpeed: '1 Gbps RJ45' })}
                   onOpenDiscovery={() => setViewMode('discovery')}
@@ -5350,6 +5349,9 @@ export const InfraTopology: React.FC<InfraTopologyProps> = ({
                 <p className="text-xs text-slate-500">
                   Varredura contínua de subnets, consulta de MIBs de switches, firewalls e APs para inclusão automática na topologia 2D.
                 </p>
+                <DemoNotice className="mt-2">
+                  esta varredura SNMP/LLDP é simulada no navegador e devolve uma lista fixa de equipamentos. Para descobrir dispositivos reais, use o Scanner de Rede ao Vivo do CMDB.
+                </DemoNotice>
               </div>
             </div>
 
@@ -6496,7 +6498,7 @@ export const InfraTopology: React.FC<InfraTopologyProps> = ({
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Categoria:</label>
                   <select
                     value={editingAccessory.category || 'Passivos & Patching'}
-                    onChange={(e) => setEditingAccessory(prev => ({ ...prev!, category: e.target.value }))}
+                    onChange={(e) => setEditingAccessory(prev => ({ ...prev!, category: e.target.value as InfrastructureAccessory['category'] }))}
                     className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold"
                   >
                     <option value="Energia & UPS">Energia & UPS</option>

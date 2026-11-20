@@ -329,7 +329,18 @@ export class ComplianceEngine {
         openRemediationsCount: openRemediations.length,
         lastEvidenceDate: linkedEvidences[0]?.collectedAt || control.assessedAt,
         isExpiredEvidence: hasExpiredEvidence,
-        gapIdentified: hasGap
+        gapIdentified: hasGap,
+        // Campos consumidos pela UI (ComplianceAssessmentView)
+        controlTitle: control.title,
+        linkedFindings: linkedFindings.map(f => ({
+          id: f.id,
+          code: f.code,
+          title: f.title,
+          severity: f.severity
+        })),
+        hasRecentEvidence: linkedEvidences.length > 0 && !hasExpiredEvidence,
+        gapDescription: control.gapDescription,
+        actionPlan: control.actionPlan
       };
     });
   }
@@ -365,7 +376,12 @@ export class ComplianceEngine {
           code,
           compliantPct: 100,
           passed: 0,
-          total: 0
+          total: 0,
+          compliancePct: 100,
+          totalControls: 0,
+          compliantCount: 0,
+          partiallyCompliantCount: 0,
+          nonCompliantCount: 0
         };
       }
 
@@ -393,7 +409,13 @@ export class ComplianceEngine {
         code,
         compliantPct,
         passed: passedCount,
-        total: fControls.length
+        total: fControls.length,
+        // Formato consumido pela UI (ComplianceFrameworkSummary)
+        compliancePct: compliantPct,
+        totalControls: fControls.length,
+        compliantCount: passedCount,
+        partiallyCompliantCount: fControls.filter(c => c.status === 'PARTIALLY_COMPLIANT').length,
+        nonCompliantCount: fControls.filter(c => c.status === 'NON_COMPLIANT').length
       };
     });
 

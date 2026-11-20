@@ -21,8 +21,7 @@ export const SYSTEM_USERS: CurrentUser[] = [
     loginTime: '08:00 (Hoje)',
     ipAddress: '192.168.1.100',
     computerHost: 'ADM-ANECTTA-MASTER',
-    status: 'Ativo',
-    password: 'Ant102030!#'
+    status: 'Ativo'
   }
 ];
 

@@ -44,13 +44,20 @@ function apiRateLimit(limit: number = 60, windowMs: number = 60000) {
 }
 
 // Middleware para extrair contexto de autenticação e tenant
+/**
+ * Identidade e papel vêm exclusivamente da sessão validada (apiAuthentication).
+ * Cabeçalhos x-user-* enviados pelo cliente são ignorados.
+ * O tenant vem do app_metadata do usuário; o cabeçalho x-tenant-id só é aceito
+ * como seleção de tenant para usuários autenticados sem tenant fixo.
+ */
 function getAuthContext(req: Request) {
-  const tenantId = (req.headers['x-tenant-id'] as string) || 'tenant-demo';
+  const authUser = req.authUser;
+  const tenantId = authUser?.tenantId || (req.headers['x-tenant-id'] as string) || 'tenant-demo';
   const user = {
-    id: (req.headers['x-user-id'] as string) || 'usr-tech-01',
-    name: (req.headers['x-user-name'] as string) || 'Carlos Amorim',
-    email: (req.headers['x-user-email'] as string) || 'carlos@empresaabc.com.br',
-    role: (req.headers['x-user-role'] as string) || 'TECHNICIAN'
+    id: authUser?.id || 'anonymous',
+    name: authUser?.name || 'Anônimo',
+    email: authUser?.email || '',
+    role: authUser?.role || 'SECURITY_VIEWER'
   };
   return { tenantId, user };
 }
@@ -108,8 +115,22 @@ router.get('/security/health', (req: Request, res: Response) => {
   }
 });
 
+/**
+ * As suítes internas alteram o store real (iniciam scans, criam relatórios e acionam
+ * o kill switch de pentests). Ficam desativadas, salvo SECURITY_ENABLE_SELF_TESTS=true
+ * (use apenas em ambiente de homologação com WORKPULSE_DATA_DIR separado).
+ */
+function requireSelfTestsEnabled(req: Request, res: Response, next: () => void) {
+  if (process.env.SECURITY_ENABLE_SELF_TESTS === "true") return next();
+  return res.status(403).json({
+    success: false,
+    error: "Autotestes desativados neste ambiente: eles alteram dados reais. Use 'npm test', que roda em diretório isolado.",
+    errorCode: "SELF_TESTS_DISABLED"
+  });
+}
+
 // Execução Automatizada da Suíte de Testes de Segurança (16 Verificações)
-router.get('/security/test-suite/run', async (req: Request, res: Response) => {
+router.get('/security/test-suite/run', requireSelfTestsEnabled, async (req: Request, res: Response) => {
   try {
     const report = await SecurityTestSuite.runAllTests();
     res.json({ success: true, data: report });
@@ -890,7 +911,8 @@ router.get('/security/compliance/summary', (req: Request, res: Response) => {
   try {
     const { tenantId } = getAuthContext(req);
     const summary = SecurityOrchestrator.getComplianceFrameworkSummary(tenantId);
-    res.json({ success: true, data: summary });
+    // A UI espera a lista de frameworks; o percentual geral segue em campo próprio.
+    res.json({ success: true, data: summary.frameworkScores, overallCompliancePct: summary.overallCompliancePct });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -1026,7 +1048,7 @@ router.get('/security/search', (req: Request, res: Response) => {
 });
 
 // 23.6. Execução Automatizada da Suíte End-to-End e Auditoria Multi-Tenant de Go-Live
-router.get('/security/e2e/run', async (req: Request, res: Response) => {
+router.get('/security/e2e/run', requireSelfTestsEnabled, async (req: Request, res: Response) => {
   try {
     const { tenantId } = getAuthContext(req);
     const report = await E2EIntegrationSuite.runFullE2ETestSuite(tenantId);

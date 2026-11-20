@@ -50,6 +50,7 @@ import {
 } from '../../types/wifiPulse';
 import { INITIAL_WIFI_DATA } from '../../data/wifiInitialData';
 import { CurrentUser } from '../../types';
+import { DemoNotice } from '../DemoNotice';
 
 interface WifiPulseModuleProps {
   currentUser?: CurrentUser;
@@ -283,6 +284,11 @@ export const WifiPulseModule: React.FC<WifiPulseModuleProps> = ({
 
   return (
     <div className="space-y-6 animate-fade-in font-sans pb-12">
+      <DemoNotice>
+        os dados de Wi-Fi (sinal, redes vizinhas, dispositivos, teste de velocidade) são simulados pelo servidor.
+        O navegador e o servidor não têm acesso ao rádio Wi-Fi da estação; a coleta real exige um agente local, ainda não implementado.
+        Diagnósticos e relatórios desta tela não devem ser anexados a chamados como medições reais.
+      </DemoNotice>
       {/* Toast Notification */}
       {notification && (
         <div className="fixed bottom-6 right-6 z-50 bg-emerald-600 text-white font-bold text-xs px-4 py-3 rounded-2xl shadow-xl flex items-center space-x-2 animate-bounce">
@@ -433,8 +439,6 @@ export const WifiPulseModule: React.FC<WifiPulseModuleProps> = ({
       {activeSubTab === 'channel_map' && (
         <WifiChannelMapView
           networks={wifiData.scannedNetworks}
-          currentChannel={wifiData.currentConnection.channel}
-          currentBand={wifiData.currentConnection.band}
           isScanning={isScanning}
           onScanNow={handleScanNow}
         />
@@ -521,7 +525,7 @@ export const WifiPulseModule: React.FC<WifiPulseModuleProps> = ({
           score={wifiData.score}
           dualTest={wifiData.dualTest}
           diagnostics={wifiData.diagnostics}
-          tenantName={currentUser?.tenantName || 'Matriz Corporativa - WorkPulse Enterprise'}
+          tenantName={'Matriz Corporativa - WorkPulse Enterprise'}
           technicianName={currentUser?.name || 'Guilherme Silva (Analista Sênior)'}
           ticketId={attachedTicketId}
           onBackToDashboard={() => setActiveSubTab('dashboard')}
@@ -533,7 +537,7 @@ export const WifiPulseModule: React.FC<WifiPulseModuleProps> = ({
         isOpen={isAgentModalOpen}
         onClose={() => setIsAgentModalOpen(false)}
         currentPlatform={wifiData.currentConnection.agentPlatform}
-        tenantId={currentUser?.tenantId || 'tenant_matriz_001'}
+        tenantId={'tenant_matriz_001'}
         onRunCollector={handleRunLocalAgentCollect}
       />
 

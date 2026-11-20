@@ -5,12 +5,14 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { onAuthStateChange, signOut as supabaseSignOut } from './services/supabase/auth.service';
-import { isSessionGloballyValid, forceGlobalSignOut, subscribeToGlobalLogout } from './services/sessionSecurity';
-import { fetchEmployees, upsertEmployees, upsertEmployee, deleteEmployee } from './services/supabase/employees.service';
-import { fetchAppRules, upsertAppRules, upsertAppRule, deleteAppRule } from './services/supabase/appRules.service';
-import { fetchSiteBlocks, upsertSiteBlocks, upsertSiteBlock, deleteSiteBlock } from './services/supabase/siteBlocks.service';
-import { fetchAssets, upsertAssets, upsertAsset, deleteAsset } from './services/supabase/assets.service';
+import { onAuthStateChange, getSession, signOut as supabaseSignOut } from './services/supabase/auth.service';
+import { isAuthorizedEmail, purgeLegacyLocalSession, forceGlobalSignOut, subscribeToGlobalLogout } from './services/sessionSecurity';
+import { fetchEmployees, upsertEmployees, deleteEmployee } from './services/supabase/employees.service';
+import { fetchAppRules, upsertAppRules, deleteAppRule } from './services/supabase/appRules.service';
+import { fetchSiteBlocks, upsertSiteBlocks, deleteSiteBlock } from './services/supabase/siteBlocks.service';
+import { fetchAssets, upsertAssets, deleteAsset } from './services/supabase/assets.service';
+import { useSupabaseCollectionSync } from './hooks/useSupabaseCollectionSync';
+import { fetchDocuments, upsertDocuments, deleteDocument, DocumentCollection } from './services/supabase/documents.service';
 import { LoginPage } from './components/auth/LoginPage';
 import { 
   Employee, 
@@ -61,6 +63,8 @@ import { VelocimetroNetPulseView } from './components/velocimetro/VelocimetroNet
 import { SecurityModule } from './components/security/SecurityModule';
 import { SilentAgentFleetModal } from './components/SilentAgentFleetModal';
 import { BackupRestoreModal } from './components/BackupRestoreModal';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { stripPasswords } from './utils/userSanitizer';
 import { INITIAL_IT_ASSETS } from './data/initialAssets';
 import { INITIAL_SUPPLIERS, INITIAL_ROOMS_ITAM, INITIAL_CATEGORIES, INITIAL_STATUSES } from './data/auxiliaryData';
 import { SupplierItem, EnvironmentRoomItem, CustomCategoryItem, CustomStatusItem, ITAsset } from './types';
@@ -82,161 +86,107 @@ export default function App() {
   // =========================================================================
   // SUPABASE AUTH — Session Guard
   // =========================================================================
-  const [authSession, setAuthSession] = useState<Session | null | undefined>(() => {
-    try {
-      const localSaved = localStorage.getItem('wp_auth_local_session');
-      if (localSaved) {
-        const parsed = JSON.parse(localSaved);
-        if (parsed?.user?.email === 'anectta@anectta.com.br' && isSessionGloballyValid(parsed)) {
-          return parsed as Session;
-        }
-        // Purge invalid/globally revoked session
-        localStorage.removeItem('wp_auth_local_session');
-        localStorage.removeItem('wp_currentUser');
-      }
-    } catch (e) {}
-    return null;
-  });
+  // undefined = verificando sessão; null = sem sessão; Session = autenticado no Supabase Auth
+  const [authSession, setAuthSession] = useState<Session | null | undefined>(undefined);
 
   useEffect(() => {
-    // Check initial validity
-    const localSaved = localStorage.getItem('wp_auth_local_session');
-    if (localSaved) {
-      try {
-        const parsed = JSON.parse(localSaved);
-        if (!isSessionGloballyValid(parsed)) {
-          localStorage.removeItem('wp_auth_local_session');
-          localStorage.removeItem('wp_currentUser');
-          setAuthSession(null);
-          return;
-        }
-      } catch (e) {
+    // Remove a antiga sessão local forjável, se ainda existir neste navegador
+    purgeLegacyLocalSession();
+
+    let active = true;
+    const applySession = (session: Session | null) => {
+      if (!active) return;
+      if (session && !isAuthorizedEmail(session.user?.email)) {
+        supabaseSignOut().catch(() => {});
         setAuthSession(null);
         return;
       }
-    }
+      setAuthSession(session);
+    };
 
-    // Subscribe to cross-tab / cross-device global logout broadcast
+    // Sessão real persistida pelo SDK do Supabase (renovada automaticamente)
+    getSession()
+      .then(applySession)
+      .catch(() => applySession(null));
+
+    // Logout disparado em outra aba/janela deste navegador
     const unsubscribeGlobal = subscribeToGlobalLogout(() => {
+      supabaseSignOut().catch(() => {});
       setAuthSession(null);
     });
 
-    // Subscribe to auth state changes (login/logout)
-    const { unsubscribe } = onAuthStateChange((session) => {
-      if (session) {
-        setAuthSession(session);
-      } else {
-        const saved = localStorage.getItem('wp_auth_local_session');
-        if (saved) {
-          try {
-            const parsed = JSON.parse(saved);
-            if (isSessionGloballyValid(parsed)) {
-              setAuthSession(parsed as Session);
-              return;
-            }
-          } catch (e) {}
-        }
-        setAuthSession(null);
-      }
-    });
-
-    // Periodic heartbeat (every 10s) and on tab focus to enforce global logout
-    const checkInterval = setInterval(() => {
-      const saved = localStorage.getItem('wp_auth_local_session');
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (!isSessionGloballyValid(parsed)) {
-            localStorage.removeItem('wp_auth_local_session');
-            localStorage.removeItem('wp_currentUser');
-            setAuthSession(null);
-          }
-        } catch {
-          setAuthSession(null);
-        }
-      }
-    }, 10000);
-
-    const onFocus = () => {
-      const saved = localStorage.getItem('wp_auth_local_session');
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (!isSessionGloballyValid(parsed)) {
-            localStorage.removeItem('wp_auth_local_session');
-            localStorage.removeItem('wp_currentUser');
-            setAuthSession(null);
-          }
-        } catch {
-          setAuthSession(null);
-        }
-      }
-    };
-    window.addEventListener('focus', onFocus);
+    // Login, logout, renovação de token e revogação vindos do Supabase
+    const { unsubscribe } = onAuthStateChange(applySession);
 
     return () => {
+      active = false;
       unsubscribeGlobal();
       unsubscribe();
-      clearInterval(checkInterval);
-      window.removeEventListener('focus', onFocus);
     };
   }, []);
+
+  // Recarrega dados somente quando o usuário autenticado muda (não a cada renovação de token)
+  const authUserId = authSession?.user?.id ?? null;
 
   // =========================================================================
   // SUPABASE DATA LOADING — Load from Supabase after login
   // =========================================================================
+  /**
+   * Carrega cada coleção do Supabase e define a "linha de base" da sincronização.
+   * - Leitura com sucesso e dados: o banco é a fonte da verdade.
+   * - Tabela vazia: mantém os dados locais, mas NÃO os envia em massa (evita semear
+   *   dados de demonstração no banco); só itens editados a partir daí são gravados.
+   * - Falha de leitura (null): a sincronização daquela coleção fica pausada, para não
+   *   sobrescrever nem apagar nada no banco, e o usuário é avisado.
+   */
   const loadSupabaseData = useCallback(async () => {
-    try {
-      const [sbEmployees, sbAppRules, sbSiteBlocks, sbAssets] = await Promise.all([
-        fetchEmployees(),
-        fetchAppRules(),
-        fetchSiteBlocks(),
-        fetchAssets(),
-      ]);
-      if (sbEmployees.length > 0) {
-        setEmployees(sbEmployees);
-        localStorage.setItem('wp_employees', JSON.stringify(sbEmployees));
-      } else {
-        // Supabase table is empty — seed it with current localStorage/mock data
-        const localEmployees = safeGetJson('wp_employees', INITIAL_EMPLOYEES);
-        if (localEmployees.length > 0) {
-          await upsertEmployees(localEmployees);
+    const collections = [
+      { key: 'employees' as const, label: 'colaboradores', fetch: fetchEmployees, set: setEmployees, storage: 'wp_employees', fallback: INITIAL_EMPLOYEES, reset: (items: any[]) => employeesSync.resetBaseline(items) },
+      { key: 'appRules' as const, label: 'regras de classificação', fetch: fetchAppRules, set: setAppRules, storage: 'wp_appRules', fallback: INITIAL_APP_RULES, reset: (items: any[]) => appRulesSync.resetBaseline(items) },
+      { key: 'siteBlocks' as const, label: 'bloqueios de sites', fetch: fetchSiteBlocks, set: setSiteBlocks, storage: 'wp_siteBlocks', fallback: INITIAL_SITE_BLOCKS, reset: (items: any[]) => siteBlocksSync.resetBaseline(items) },
+      { key: 'assets' as const, label: 'ativos', fetch: fetchAssets, set: setAssets, storage: 'wp_assets', fallback: INITIAL_IT_ASSETS, reset: (items: any[]) => assetsSync.resetBaseline(items) },
+      { key: 'suppliers' as const, label: 'fornecedores', fetch: () => fetchDocuments('suppliers'), set: setSuppliers, storage: 'wp_suppliers', fallback: INITIAL_SUPPLIERS, reset: (items: any[]) => suppliersSync.resetBaseline(items) },
+      { key: 'auxRooms' as const, label: 'salas e ambientes', fetch: () => fetchDocuments('aux_rooms'), set: setAuxRooms, storage: 'wp_aux_rooms', fallback: INITIAL_ROOMS_ITAM, reset: (items: any[]) => auxRoomsSync.resetBaseline(items) },
+      { key: 'categories' as const, label: 'categorias', fetch: () => fetchDocuments('aux_categories'), set: setCustomCategories, storage: 'wp_custom_categories', fallback: INITIAL_CATEGORIES, reset: (items: any[]) => categoriesSync.resetBaseline(items) },
+      { key: 'statuses' as const, label: 'status', fetch: () => fetchDocuments('aux_statuses'), set: setCustomStatuses, storage: 'wp_custom_statuses', fallback: INITIAL_STATUSES, reset: (items: any[]) => statusesSync.resetBaseline(items) },
+      { key: 'pcLockPolicies' as const, label: 'políticas de trava de PC', fetch: () => fetchDocuments('pc_lock_policies'), set: setPcLockPolicies, storage: 'wp_pcLockPolicies', fallback: INITIAL_PC_LOCK_POLICIES, reset: (items: any[]) => pcLockSync.resetBaseline(items) },
+    ];
+
+    const failed: string[] = [];
+    await Promise.all(collections.map(async (c) => {
+      try {
+        const remote = await (c.fetch as () => Promise<any[] | null>)();
+        if (remote === null) {
+          failed.push(c.label);
+          setSyncReady(prev => ({ ...prev, [c.key]: false }));
+          return;
         }
+        if (remote.length > 0) {
+          (c.set as (v: any[]) => void)(remote);
+          localStorage.setItem(c.storage, JSON.stringify(remote));
+          c.reset(remote);
+        } else {
+          c.reset(safeGetJson(c.storage, c.fallback as any[]));
+        }
+        setSyncReady(prev => ({ ...prev, [c.key]: true }));
+      } catch (err) {
+        console.warn(`[WorkPulse] Falha ao carregar ${c.label} do Supabase:`, err);
+        failed.push(c.label);
       }
-      if (sbAppRules.length > 0) {
-        setAppRules(sbAppRules);
-        localStorage.setItem('wp_appRules', JSON.stringify(sbAppRules));
-      } else {
-        const localRules = safeGetJson('wp_appRules', INITIAL_APP_RULES);
-        if (localRules.length > 0) await upsertAppRules(localRules);
-      }
-      if (sbSiteBlocks.length > 0) {
-        setSiteBlocks(sbSiteBlocks);
-        localStorage.setItem('wp_siteBlocks', JSON.stringify(sbSiteBlocks));
-      } else {
-        const localBlocks = safeGetJson('wp_siteBlocks', INITIAL_SITE_BLOCKS);
-        if (localBlocks.length > 0) await upsertSiteBlocks(localBlocks);
-      }
-      if (sbAssets.length > 0) {
-        setAssets(sbAssets);
-        localStorage.setItem('wp_assets', JSON.stringify(sbAssets));
-      } else {
-        const localAssets = safeGetJson('wp_assets', INITIAL_IT_ASSETS);
-        if (localAssets.length > 0) await upsertAssets(localAssets);
-      }
-      console.info('[WorkPulse] Supabase data loaded successfully.');
-    } catch (err) {
-      console.warn('[WorkPulse] Failed to load from Supabase, using localStorage fallback:', err);
-    }
+    }));
+
+    setSyncError(failed.length > 0
+      ? `Não foi possível ler ${failed.join(', ')} do banco de dados. As alterações nesses módulos não estão sendo salvas.`
+      : null);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Load Supabase data once when session becomes available
   useEffect(() => {
-    if (authSession) {
+    if (authUserId) {
       loadSupabaseData();
     }
-  }, [authSession, loadSupabaseData]);
+  }, [authUserId, loadSupabaseData]);
 
   const [activeTab, setActiveTab] = useState<TabType>(() => {
     try {
@@ -363,7 +313,8 @@ export default function App() {
   // Simulation & Modal State with localStorage Persistence
   const [isSimulating, setIsSimulating] = useState<boolean>(() => {
     const saved = localStorage.getItem('wp_isSimulating');
-    return saved !== null ? saved === 'true' : true;
+    // Simulação desligada por padrão: dados simulados não devem parecer reais nem ir ao banco
+    return saved !== null ? saved === 'true' : false;
   });
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     const saved = localStorage.getItem('wp_isDarkMode');
@@ -502,6 +453,80 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('wp_isSimulating', String(isSimulating));
   }, [isSimulating]);
+
+  // =========================================================================
+  // SINCRONIZAÇÃO COM O SUPABASE — toda alteração de estado é gravada no banco
+  // =========================================================================
+  const [syncReady, setSyncReady] = useState({ employees: false, appRules: false, siteBlocks: false, assets: false, suppliers: false, auxRooms: false, categories: false, statuses: false, pcLockPolicies: false });
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const reportSyncError = useCallback((message: string) => setSyncError(message), []);
+
+  const employeesSync = useSupabaseCollectionSync(employees, {
+    label: 'colaboradores',
+    // Durante a simulação os dados são fictícios: nada é gravado
+    enabled: Boolean(authUserId) && syncReady.employees && !isSimulating,
+    upsertMany: upsertEmployees,
+    remove: deleteEmployee,
+    onError: reportSyncError,
+  });
+  const appRulesSync = useSupabaseCollectionSync(appRules, {
+    label: 'regras de classificação',
+    enabled: Boolean(authUserId) && syncReady.appRules,
+    upsertMany: upsertAppRules,
+    remove: deleteAppRule,
+    onError: reportSyncError,
+  });
+  const siteBlocksSync = useSupabaseCollectionSync(siteBlocks, {
+    label: 'bloqueios de sites',
+    enabled: Boolean(authUserId) && syncReady.siteBlocks,
+    upsertMany: upsertSiteBlocks,
+    remove: deleteSiteBlock,
+    onError: reportSyncError,
+  });
+  const assetsSync = useSupabaseCollectionSync(assets, {
+    label: 'ativos',
+    enabled: Boolean(authUserId) && syncReady.assets,
+    upsertMany: upsertAssets,
+    remove: deleteAsset,
+    onError: reportSyncError,
+  });
+
+  // Coleções de configuração (tabela genérica app_documents)
+  const useDocumentSync = <T extends { id: string }>(items: T[], collection: DocumentCollection, label: string, ready: boolean) =>
+    useSupabaseCollectionSync(items, {
+      label,
+      enabled: Boolean(authUserId) && ready,
+      upsertMany: (changed: T[]) => upsertDocuments(collection, changed),
+      remove: (id: string) => deleteDocument(collection, id),
+      onError: reportSyncError,
+    });
+  const suppliersSync = useDocumentSync(suppliers, 'suppliers', 'fornecedores', syncReady.suppliers);
+  const auxRoomsSync = useDocumentSync(auxRooms, 'aux_rooms', 'salas e ambientes', syncReady.auxRooms);
+  const categoriesSync = useDocumentSync(customCategories, 'aux_categories', 'categorias', syncReady.categories);
+  const statusesSync = useDocumentSync(customStatuses, 'aux_statuses', 'status', syncReady.statuses);
+  const pcLockSync = useDocumentSync(pcLockPolicies, 'pc_lock_policies', 'políticas de trava de PC', syncReady.pcLockPolicies);
+
+  // A identidade exibida no sistema é a da sessão autenticada no Supabase Auth
+  useEffect(() => {
+    const user = authSession?.user;
+    if (!user) return;
+    const meta = (user.user_metadata || {}) as Record<string, any>;
+    setCurrentUser(prev => ({
+      ...prev,
+      id: user.id,
+      email: user.email || prev.email,
+      name: meta.name || prev.name,
+    }));
+  }, [authSession?.user?.id]);
+
+  // Ao desligar a simulação, descarta os dados simulados recarregando do banco
+  const wasSimulatingRef = React.useRef(isSimulating);
+  useEffect(() => {
+    if (wasSimulatingRef.current && !isSimulating && authUserId) {
+      loadSupabaseData();
+    }
+    wasSimulatingRef.current = isSimulating;
+  }, [isSimulating, authUserId, loadSupabaseData]);
 
   useEffect(() => {
     localStorage.setItem('wp_currentUser', JSON.stringify(currentUser));
@@ -747,12 +772,12 @@ export default function App() {
         const rows = timecardRecords.map(rec => [
           `"${rec.employeeName}"`,
           `"${rec.department}"`,
-          `"${rec.sourceSystem}"`,
-          `"${rec.clockIn} - ${rec.clockOut}"`,
-          `${rec.activePCHours}h`,
-          `${rec.correlationScore}%`,
-          rec.anomalyDetected ? 'SIM' : 'NAO',
-          `"${rec.anomalyType || 'N/A'}"`
+          `"${rec.systemSource}"`,
+          `"${rec.pontoPunchIn} - ${rec.pontoPunchOut}"`,
+          `${rec.agentActiveWorkedHours}h`,
+          `${rec.correlationPct}%`,
+          rec.hasAnomaly ? 'SIM' : 'NAO',
+          `"${rec.anomalyReason || 'N/A'}"`
         ]);
         const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(';'), ...rows.map(r => r.join(';'))].join('\n');
         const encodedUri = encodeURI(csvContent);
@@ -777,7 +802,7 @@ export default function App() {
         setRankingsExportTrigger(prev => prev + 1);
         break;
       case 'gpo_lgpd': {
-        const gpoScript = `# WORKPULSE GPO DEPLOYMENT SCRIPT\n$Server = "https://app.workpulse.io"\n$Token = "wp-prod-token-994821a8-8f82-4e89-a212-32b220199211"\nmsiexec.exe /i "\\\\srv-dc01\\deploy\\WorkPulseAgent.msi" /qn TENANT_TOKEN=$Token SERVER_URL=$Server`;
+        const gpoScript = `# WORKPULSE GPO DEPLOYMENT SCRIPT\n$Server = "https://app.workpulse.io"\n$Token = "<SEU_ENROLLMENT_TOKEN>"\nmsiexec.exe /i "\\\\srv-dc01\\deploy\\WorkPulseAgent.msi" /qn TENANT_TOKEN=$Token SERVER_URL=$Server`;
         const blob = new Blob([gpoScript], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -808,7 +833,7 @@ export default function App() {
 
   const handleSignOut = async () => {
     try {
-      localStorage.removeItem('wp_auth_local_session');
+      purgeLegacyLocalSession();
       localStorage.removeItem('wp_currentUser');
       // Purge any stored Supabase or session tokens
       Object.keys(localStorage).forEach((key) => {
@@ -853,22 +878,7 @@ export default function App() {
   if (authSession === null) {
     return (
       <LoginPage
-        onLoginSuccess={(session) => {
-          if (session) {
-            setAuthSession(session as Session);
-          } else {
-            const now = Date.now();
-            setAuthSession({
-              access_token: 'wp-master-anectta-token-' + now,
-              refresh_token: 'wp-master-anectta-refresh',
-              expires_in: 86400,
-              token_type: 'bearer',
-              created_at_epoch: now,
-              issued_at: now,
-              user: { id: 'usr-admin-anectta', email: 'anectta@anectta.com.br' } as any
-            } as unknown as Session);
-          }
-        }}
+        onLoginSuccess={(session) => setAuthSession(session)}
       />
     );
   }
@@ -920,6 +930,24 @@ export default function App() {
               onSignOut={handleSignOut}
             />
           )}
+          {syncError && (
+            <div role="alert" className="mx-4 mt-3 p-3 rounded-xl border border-amber-500/40 bg-amber-500/10 text-xs text-amber-800 dark:text-amber-300 flex items-start justify-between gap-3">
+              <span>⚠️ {syncError}</span>
+              <button
+                type="button"
+                onClick={() => { setSyncError(null); loadSupabaseData(); }}
+                className="shrink-0 px-2 py-1 rounded-lg bg-amber-600 text-white font-bold hover:bg-amber-700"
+              >
+                Tentar novamente
+              </button>
+            </div>
+          )}
+          {isSimulating && (
+            <div className="mx-4 mt-3 p-2 rounded-xl border border-sky-500/30 bg-sky-500/10 text-[11px] text-sky-800 dark:text-sky-300">
+              Modo simulação ativo: os dados de colaboradores exibidos são fictícios e não são gravados no banco.
+            </div>
+          )}
+          <ErrorBoundary key={activeTab} moduleName={activeTab}>
           {activeTab === 'overview' && (
             <DashboardOverview
               employees={filteredEmployees}
@@ -1026,7 +1054,7 @@ export default function App() {
               onOpenBackupModal={() => setIsBackupModalOpen(true)}
               onUpdateUsersList={(updated) => {
                 setSystemUsers(updated);
-                localStorage.setItem('wp_users_list_v1', JSON.stringify(updated));
+                localStorage.setItem('wp_users_list_v1', JSON.stringify(stripPasswords(updated)));
               }}
             />
           )}
@@ -1066,6 +1094,7 @@ export default function App() {
               openAddModalTrigger={assetCreateModalTrigger}
             />
           )}
+          </ErrorBoundary>
         </main>
       </div>
 
@@ -1143,7 +1172,17 @@ export default function App() {
         onClose={() => setIsBackupModalOpen(false)}
         currentUser={currentUser}
         onRestoreSuccess={() => {
-          console.log('[WorkPulse] Backup restore callback triggered');
+          // Reaplica no estado o que o backup gravou no localStorage. A sincronização
+          // compara com o banco e grava/exclui o necessário, tornando a restauração definitiva.
+          setEmployees(safeGetJson('wp_employees', INITIAL_EMPLOYEES));
+          setAppRules(safeGetJson('wp_appRules', INITIAL_APP_RULES));
+          setSiteBlocks(safeGetJson('wp_siteBlocks', INITIAL_SITE_BLOCKS));
+          setPcLockPolicies(safeGetJson('wp_pcLockPolicies', INITIAL_PC_LOCK_POLICIES));
+          setAssets(safeGetJson('wp_assets', INITIAL_IT_ASSETS));
+          setSuppliers(safeGetJson('wp_suppliers', INITIAL_SUPPLIERS));
+          setAuxRooms(safeGetJson('wp_aux_rooms', INITIAL_ROOMS_ITAM));
+          setCustomCategories(safeGetJson('wp_custom_categories', INITIAL_CATEGORIES));
+          setCustomStatuses(safeGetJson('wp_custom_statuses', INITIAL_STATUSES));
         }}
       />
 

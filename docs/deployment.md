@@ -8,7 +8,7 @@
 | **Banco de Dados & Auth** | **Supabase** | Supabase CLI (`supabase db push`) | Tabelas PostgreSQL com RLS ativo |
 | **Backup Agent (Daemon/Service)** | **Servidores / Nós Locais** | Instalador MSI / RPM / DEB / Docker | Binário compilado ou pacote Node/Rust |
 | **Backup Engine** | **Nó Local (Data Plane)** | Embutido no Agent / Bridge IPC | Engine de processamento de I/O local |
-| **Desktop App** | **Workstations** | Tauri Bundle (`.msi`, `.dmg`, `.AppImage`) | Aplicação desktop nativa |
+| **Desktop App** | **Workstations** | **Não implementado** (ver docs/desktop.md) | — |
 
 ---
 

@@ -7,7 +7,7 @@ O **WorkPulse Backup Agent** é o serviço responsável pela gestão de ciclo de
 Ele é projetado para operar como:
 - **Serviço Windows** (`windows-service.ts`)
 - **Daemon Linux** (`systemd` / `linux-daemon.ts`)
-- **Instância Embutida Desktop** (Tauri Desktop App)
+- **Instância Embutida Desktop** (Tauri) — **não implementada**, ver docs/desktop.md
 
 ---
 

@@ -31,6 +31,7 @@ import {
   Tooltip,
   ReferenceLine
 } from 'recharts';
+import { DemoNotice } from './DemoNotice';
 
 interface DashboardOverviewProps {
   employees: Employee[];
@@ -117,6 +118,9 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   return (
     <div className="space-y-6 font-sans">
 
+      <DemoNotice>
+        enquanto nenhum agente de coleta estiver enviando telemetria, horas, produtividade, tendências e históricos deste painel são valores de exemplo e não refletem a jornada real dos colaboradores.
+      </DemoNotice>
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         

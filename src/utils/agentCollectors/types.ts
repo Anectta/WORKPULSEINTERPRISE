@@ -10,27 +10,27 @@ import {
 } from '../../types/cmdb';
 
 export interface IHardwareCollector {
-  collect(): Promise<HardwareInventory> | HardwareInventory;
+  collect(): HardwareInventory;
 }
 
 export interface IOSCollector {
-  collect(): Promise<OperatingSystemInventory> | OperatingSystemInventory;
+  collect(): OperatingSystemInventory;
 }
 
 export interface ISoftwareCollector {
-  collect(): Promise<InstalledSoftwareItem[]> | InstalledSoftwareItem[];
+  collect(): InstalledSoftwareItem[];
 }
 
 export interface INetworkCollector {
-  collect(): Promise<NetworkInterfaceInventory[]> | NetworkInterfaceInventory[];
+  collect(): NetworkInterfaceInventory[];
 }
 
 export interface IUserCollector {
-  collect(): Promise<UserInventory> | UserInventory;
+  collect(): UserInventory;
 }
 
 export interface ISecurityCollector {
-  collect(): Promise<SecurityInventory> | SecurityInventory;
+  collect(): SecurityInventory;
 }
 
 export interface IPlatformCollectorAdapter {
