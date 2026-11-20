@@ -27,14 +27,15 @@ function blockToRow(b: SiteBlockRule): Record<string, unknown> {
   };
 }
 
-export async function fetchSiteBlocks(): Promise<SiteBlockRule[]> {
+export async function fetchSiteBlocks(): Promise<SiteBlockRule[] | null> {
   const { data, error } = await supabase
     .from('site_block_rules')
     .select('*')
     .order('title');
   if (error) {
     console.error('[siteBlocks.service] fetchSiteBlocks error:', error.message);
-    return [];
+    // null = falha de leitura (diferente de tabela vazia)
+    return null;
   }
   return (data || []).map(rowToBlock);
 }

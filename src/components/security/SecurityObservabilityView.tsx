@@ -29,6 +29,7 @@ export const SecurityObservabilityView: React.FC = () => {
   const [testReport, setTestReport] = useState<SecurityTestSuiteReport | null>(null);
   const [loadingHealth, setLoadingHealth] = useState(false);
   const [runningTests, setRunningTests] = useState(false);
+  const [testError, setTestError] = useState<string | null>(null);
   const [copiedSql, setCopiedSql] = useState(false);
 
   // Carregar saúde do sistema
@@ -50,11 +51,14 @@ export const SecurityObservabilityView: React.FC = () => {
   // Executar a Suíte de Testes Automatizada
   const runSecurityTests = async () => {
     setRunningTests(true);
+    setTestError(null);
     try {
       const res = await fetch('/api/v1/security/test-suite/run');
       const data = await res.json();
       if (data.success) {
         setTestReport(data.data);
+      } else {
+        setTestError(data.error || `Falha ao executar a suíte (HTTP ${res.status}).`);
       }
     } catch (err) {
       console.error('Erro ao executar suíte de testes de segurança:', err);
@@ -119,6 +123,12 @@ export const SecurityObservabilityView: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {testError && (
+        <div role="alert" className="p-3 rounded-xl border border-amber-500/40 bg-amber-500/10 text-xs text-amber-300">
+          {testError}
+        </div>
+      )}
 
       {/* Cards de Status de Componentes Críticos */}
       {health && (

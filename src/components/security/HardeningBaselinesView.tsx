@@ -28,6 +28,7 @@ import {
   SecurityTarget,
   SecurityFinding
 } from '../../types/security';
+import { DemoNotice } from '../DemoNotice';
 
 interface HardeningBaselinesViewProps {
   onOpenFinding?: (findingId: string) => void;
@@ -137,6 +138,9 @@ export const HardeningBaselinesView: React.FC<HardeningBaselinesViewProps> = ({
 
   return (
     <div className="space-y-6">
+      <DemoNotice>
+        a avaliação de hardening usa telemetria fixa enviada pela própria interface; nenhuma configuração real das máquinas é coletada. Os percentuais de conformidade são ilustrativos.
+      </DemoNotice>
       {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900/60 border border-slate-800/80 p-5 rounded-xl">
         <div>

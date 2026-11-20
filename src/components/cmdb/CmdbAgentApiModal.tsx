@@ -174,7 +174,7 @@ export const CmdbAgentApiModal: React.FC<CmdbAgentApiModalProps> = ({
 
   // Sample payloads for API tester
   const sampleEnroll = {
-    enrollmentToken: enrollmentTokens.find(t => t.status === 'active')?.id ? "enr_tok_..." : "wp-prod-token-994821a8-8f82-4e89-a212-32b220199211",
+    enrollmentToken: enrollmentTokens.find(t => t.status === 'active')?.id ? "enr_tok_..." : "<SEU_ENROLLMENT_TOKEN>",
     hostname: "DESKTOP-DIRETORIA-01",
     macAddress: "00:1B:44:11:3A:B7",
     operatingSystem: "Windows 11 Pro 23H2",

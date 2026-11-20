@@ -1,17 +1,32 @@
 import { supabase } from '../lib/supabaseClient';
 
-/**
- * Baseline timestamp (ms). Any session issued prior to this timestamp 
- * is considered globally revoked and immediately destroyed across all machines.
- */
-export const GLOBAL_REVOCATION_BASELINE = 1790876400000; // 2026-10-01T14:40:00.000Z
-
 const BROADCAST_CHANNEL_NAME = 'wp_auth_global_channel';
 const LOCAL_REVOCATION_KEY = 'wp_global_revocation_epoch';
+/** Chave da antiga sessão local forjável — removida em toda inicialização. */
+const LEGACY_LOCAL_SESSION_KEY = 'wp_auth_local_session';
 
 /**
- * Broadcast channel for multi-tab and multi-window live logout sync
+ * Contas autorizadas a usar o sistema. Configurável via VITE_AUTH_ALLOWED_EMAILS
+ * (lista separada por vírgula). A validação definitiva é feita no servidor.
  */
+const ALLOWED_EMAILS: string[] = (
+  ((import.meta as any).env?.VITE_AUTH_ALLOWED_EMAILS as string | undefined) || 'anectta@anectta.com.br'
+)
+  .split(',')
+  .map(e => e.trim().toLowerCase())
+  .filter(Boolean);
+
+export function isAuthorizedEmail(email: string | null | undefined): boolean {
+  return Boolean(email) && ALLOWED_EMAILS.includes(String(email).trim().toLowerCase());
+}
+
+/** Remove resquícios da autenticação local antiga (sessão forjável e usuário em cache). */
+export function purgeLegacyLocalSession(): void {
+  try {
+    localStorage.removeItem(LEGACY_LOCAL_SESSION_KEY);
+  } catch {}
+}
+
 function getBroadcastChannel(): BroadcastChannel | null {
   if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
     try {
@@ -23,84 +38,12 @@ function getBroadcastChannel(): BroadcastChannel | null {
   return null;
 }
 
-/**
- * Returns the highest revocation timestamp known locally
- */
-export function getRevocationEpoch(): number {
+function purgeLocalAuthStorage(): void {
   try {
-    const saved = localStorage.getItem(LOCAL_REVOCATION_KEY);
-    const parsed = saved ? Number(saved) : 0;
-    return Math.max(GLOBAL_REVOCATION_BASELINE, parsed);
-  } catch {
-    return GLOBAL_REVOCATION_BASELINE;
-  }
-}
-
-/**
- * Checks whether a given session is valid or has been revoked globally
- */
-export function isSessionGloballyValid(session: any): boolean {
-  if (!session || !session.user) return false;
-  
-  // Verify account is anectta@anectta.com.br
-  if (session.user.email !== 'anectta@anectta.com.br') return false;
-
-  const epoch = getRevocationEpoch();
-  const sessionCreatedAt = Number(session.created_at_epoch || session.issued_at || 0);
-
-  // If session has no timestamp or was created before the revocation cutoff, it is revoked!
-  if (!sessionCreatedAt || sessionCreatedAt < epoch) {
-    return false;
-  }
-
-  return true;
-}
-
-/**
- * Forces global sign out of ALL connected PCs and browsers.
- * 1. Updates local & remote revocation epoch
- * 2. Broadcasts logout to all tabs/windows
- * 3. Revokes all Supabase tokens worldwide
- * 4. Clears local storage on this workstation
- */
-export async function forceGlobalSignOut(): Promise<void> {
-  const newEpoch = Date.now();
-  
-  // 1. Update local revocation epoch
-  try {
-    localStorage.setItem(LOCAL_REVOCATION_KEY, String(newEpoch));
-  } catch {}
-
-  // 2. Broadcast to all open tabs and windows via BroadcastChannel
-  try {
-    const channel = getBroadcastChannel();
-    if (channel) {
-      channel.postMessage({ type: 'FORCE_GLOBAL_LOGOUT', epoch: newEpoch });
-      channel.close();
-    }
-  } catch {}
-
-  // 3. Revoke all Supabase tokens globally across all devices
-  try {
-    await supabase.auth.signOut({ scope: 'global' });
-  } catch (err) {
-    console.warn('[sessionSecurity] Supabase global signOut error:', err);
-  }
-
-  // 4. Try updating remote database status if configured
-  try {
-    await supabase
-      .from('system_users')
-      .update({ status: 'Revoked', updated_at: new Date().toISOString() })
-      .eq('email', 'anectta@anectta.com.br');
-  } catch {}
-
-  // 5. Purge local session storage
-  try {
-    localStorage.removeItem('wp_auth_local_session');
+    localStorage.removeItem(LEGACY_LOCAL_SESSION_KEY);
     localStorage.removeItem('wp_currentUser');
     Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith('sb-') || key.includes('auth-token') || key.includes('supabase')) {
+      if (key.startsWith('sb-') || key.includes('auth-token')) {
         localStorage.removeItem(key);
       }
     });
@@ -109,42 +52,46 @@ export async function forceGlobalSignOut(): Promise<void> {
 }
 
 /**
- * Sets up a listener for remote global logout signals
+ * Encerra a sessão em todos os dispositivos:
+ * revoga os refresh tokens no Supabase (scope global) e avisa as outras abas.
+ * Tokens de acesso já emitidos expiram no prazo configurado no Supabase (padrão 1h)
+ * e são recusados pelo servidor ao tentar renovar.
  */
+export async function forceGlobalSignOut(): Promise<void> {
+  try {
+    await supabase.auth.signOut({ scope: 'global' });
+  } catch (err) {
+    console.warn('[sessionSecurity] Falha ao revogar sessões globalmente:', err);
+  }
+
+  try {
+    localStorage.setItem(LOCAL_REVOCATION_KEY, String(Date.now()));
+  } catch {}
+
+  try {
+    const channel = getBroadcastChannel();
+    if (channel) {
+      channel.postMessage({ type: 'FORCE_GLOBAL_LOGOUT' });
+      channel.close();
+    }
+  } catch {}
+
+  purgeLocalAuthStorage();
+}
+
+/** Escuta pedidos de logout vindos de outras abas/janelas deste navegador. */
 export function subscribeToGlobalLogout(onLogout: () => void): () => void {
   const channel = getBroadcastChannel();
-  
+
   const handleMessage = (event: MessageEvent) => {
-    if (event.data?.type === 'FORCE_GLOBAL_LOGOUT') {
-      try {
-        localStorage.removeItem('wp_auth_local_session');
-        localStorage.removeItem('wp_currentUser');
-      } catch {}
-      onLogout();
-    }
+    if (event.data?.type === 'FORCE_GLOBAL_LOGOUT') onLogout();
   };
 
   const handleStorage = (event: StorageEvent) => {
-    if (event.key === LOCAL_REVOCATION_KEY || event.key === 'wp_auth_local_session') {
-      const localSaved = localStorage.getItem('wp_auth_local_session');
-      if (!localSaved) {
-        onLogout();
-      } else {
-        try {
-          const parsed = JSON.parse(localSaved);
-          if (!isSessionGloballyValid(parsed)) {
-            onLogout();
-          }
-        } catch {
-          onLogout();
-        }
-      }
-    }
+    if (event.key === LOCAL_REVOCATION_KEY) onLogout();
   };
 
-  if (channel) {
-    channel.addEventListener('message', handleMessage);
-  }
+  if (channel) channel.addEventListener('message', handleMessage);
   window.addEventListener('storage', handleStorage);
 
   return () => {

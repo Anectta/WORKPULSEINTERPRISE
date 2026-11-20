@@ -33,7 +33,7 @@ export const INITIAL_KB_ARTICLES: KBArticle[] = [
         stepNumber: 1,
         title: 'Acessar o Painel de Ociosidade',
         detail: 'Clique na aba "4. Controle de Ociosidade" no menu lateral esquerdo ou no ícone de sino do topo.',
-        tip: 'Você também pode alterar a tolerância direto pelo seletor rápido no topo da Navbar.'
+        tip: 'Você também pode alterar a tolerância direto pelo seletor rápido no cabeçalho da página.'
       },
       {
         stepNumber: 2,
@@ -352,7 +352,7 @@ export const INITIAL_KB_FAQS: KBFaq[] = [
   {
     id: 'faq-101',
     question: 'Como alterar o tempo tolerado de ociosidade para a minha equipe?',
-    answer: 'Acesse a barra superior (Navbar) ou a aba "Controle de Ociosidade" e utilize o menu suspenso de minutagem (10, 15, 20, 30, 60 ou 120 minutos). A alteração é aplicada imediatamente para as regras de alerta na tela.',
+    answer: 'Acesse o cabeçalho da página ou a aba "Controle de Ociosidade" e utilize o menu suspenso de minutagem (10, 15, 20, 30, 60 ou 120 minutos). A alteração é aplicada imediatamente para as regras de alerta na tela.',
     moduleId: 'Ociosidade',
     category: 'Configurações de Alertas',
     tags: ['ociosidade', 'tempo', 'tolerancia', 'alerta'],
@@ -473,7 +473,7 @@ export const CONTEXTUAL_HELP_MAP: Record<string, KBContextHelp> = {
     tabTitle: '1. Real-time Dashboard',
     objective: 'Fornecer uma visão executiva consolidada da produtividade, presença e distribuição das equipes em tempo real.',
     description: 'O Dashboard Real-time apresenta os principais KPIs operacionais: Score Mapeado de Produtividade, Horas Trabalhadas, Porcentagem de Ociosidade, Evolução de 7 Dias e Comparativo entre modelos de trabalho (Home Office vs Presencial).',
-    howToUse: 'Utilize os filtros superiores da Navbar para alternar entre "Home Office", "Presencial" ou selecionar um Departamento específico. Clique em qualquer card de colaborador para inspecionar sua timeline de atividades.',
+    howToUse: 'Utilize os filtros do cabeçalho da página para alternar entre "Home Office", "Presencial" ou selecionar um Departamento específico. Clique em qualquer card de colaborador para inspecionar sua timeline de atividades.',
     videoUrl: 'https://youtube.com/watch?v=demo_overview',
     stepByStep: [
       'Selecione a área desejada no filtro de departamento.',

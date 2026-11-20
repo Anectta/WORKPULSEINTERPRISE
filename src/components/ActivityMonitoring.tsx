@@ -181,7 +181,7 @@ export const ActivityMonitoring: React.FC<ActivityMonitoringProps> = ({
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Registros capturados pelo Agente Silencioso sem keylogger</p>
             </div>
             <span className="font-mono text-xs font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-3 py-1 rounded-xl border border-blue-200 dark:border-blue-800">
-              {currentEmployee.pcHostName}
+              {currentEmployee.computerHost}
             </span>
           </div>
 
@@ -208,8 +208,6 @@ export const ActivityMonitoring: React.FC<ActivityMonitoringProps> = ({
                       <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold border ${
                         log.category === 'Produtivo'
                           ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
-                          : log.category === 'Ocioso'
-                          ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'
                           : log.category === 'Improdutivo'
                           ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'
                           : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'

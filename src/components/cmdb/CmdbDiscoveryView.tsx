@@ -50,6 +50,7 @@ import {
   DiscoveryPipelineStage
 } from '../../types/cmdb';
 import { LiveNetworkScannerTab } from './LiveNetworkScannerTab';
+import { DemoNotice } from '../DemoNotice';
 
 interface CmdbDiscoveryViewProps {
   items: ConfigurationItem[];
@@ -440,6 +441,9 @@ export const CmdbDiscoveryView: React.FC<CmdbDiscoveryViewProps> = ({
 
   return (
     <div className="space-y-5">
+      <DemoNotice>
+        os Discovery Jobs desta tela retornam equipamentos e logs pré-definidos pelo servidor. Para varredura real da rede local, use a aba de Scanner de Rede ao Vivo.
+      </DemoNotice>
       {/* TOAST ALERT */}
       {toastMessage && (
         <div className={`p-4 rounded-xl text-xs font-bold flex items-center justify-between shadow-lg transition-all ${

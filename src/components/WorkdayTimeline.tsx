@@ -110,24 +110,24 @@ export const WorkdayTimeline: React.FC<WorkdayTimelineProps> = ({
                           <div className="font-bold text-slate-900 dark:text-white">{rec.employeeName}</div>
                           <div className="text-[10px] text-slate-500 dark:text-slate-400">{rec.department}</div>
                         </td>
-                        <td className="p-3 text-slate-700 dark:text-slate-300 font-semibold">{rec.sourceSystem}</td>
-                        <td className="p-3 font-mono text-slate-800 dark:text-slate-200 font-bold">{rec.clockIn} - {rec.clockOut}</td>
-                        <td className="p-3 font-mono font-bold text-slate-900 dark:text-white">{rec.activePCHours}h</td>
+                        <td className="p-3 text-slate-700 dark:text-slate-300 font-semibold">{rec.systemSource}</td>
+                        <td className="p-3 font-mono text-slate-800 dark:text-slate-200 font-bold">{rec.pontoPunchIn} - {rec.pontoPunchOut}</td>
+                        <td className="p-3 font-mono font-bold text-slate-900 dark:text-white">{rec.agentActiveWorkedHours}h</td>
                         <td className="p-3">
                           <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold border ${
-                            rec.correlationScore >= 90
+                            rec.correlationPct >= 90
                               ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
-                              : rec.correlationScore >= 75
+                              : rec.correlationPct >= 75
                               ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800'
                               : 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'
                           }`}>
-                            {rec.correlationScore}% MATCH
+                            {rec.correlationPct}% MATCH
                           </span>
                         </td>
                         <td className="p-3">
-                          {rec.anomalyDetected ? (
+                          {rec.hasAnomaly ? (
                             <span className="text-[10px] font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 px-2 py-0.5 rounded-lg flex items-center w-max">
-                              <AlertTriangle className="w-3 h-3 mr-1" /> {rec.anomalyType}
+                              <AlertTriangle className="w-3 h-3 mr-1" /> {rec.anomalyReason}
                             </span>
                           ) : (
                             <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded-lg flex items-center w-max">
@@ -155,17 +155,17 @@ export const WorkdayTimeline: React.FC<WorkdayTimelineProps> = ({
                 <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 space-y-1">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 font-mono">Colaborador Selecionado</span>
                   <div className="text-sm font-black text-slate-900 dark:text-white">{selectedRecord.employeeName}</div>
-                  <p className="text-slate-500 dark:text-slate-400 text-[11px]">{selectedRecord.department} • Integração REP {selectedRecord.sourceSystem}</p>
+                  <p className="text-slate-500 dark:text-slate-400 text-[11px]">{selectedRecord.department} • Integração REP {selectedRecord.systemSource}</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-slate-700 dark:text-slate-300">
                   <div className="p-3 bg-slate-50/80 dark:bg-slate-800/80 rounded-2xl border border-slate-200/60 dark:border-slate-700/60">
                     <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-bold">Ponto Batido</span>
-                    <span className="font-mono font-bold text-slate-900 dark:text-white text-sm">{selectedRecord.clockIn} - {selectedRecord.clockOut}</span>
+                    <span className="font-mono font-bold text-slate-900 dark:text-white text-sm">{selectedRecord.pontoPunchIn} - {selectedRecord.pontoPunchOut}</span>
                   </div>
                   <div className="p-3 bg-slate-50/80 dark:bg-slate-800/80 rounded-2xl border border-slate-200/60 dark:border-slate-700/60">
                     <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-bold">Atividade no PC</span>
-                    <span className="font-mono font-bold text-blue-700 dark:text-blue-400 text-sm">{selectedRecord.activePCHours}h Efetivas</span>
+                    <span className="font-mono font-bold text-blue-700 dark:text-blue-400 text-sm">{selectedRecord.agentActiveWorkedHours}h Efetivas</span>
                   </div>
                 </div>
 
@@ -175,8 +175,8 @@ export const WorkdayTimeline: React.FC<WorkdayTimelineProps> = ({
                     Auditoria de Conformidade Trabalhista
                   </div>
                   <p className="text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed font-medium">
-                    {selectedRecord.anomalyDetected 
-                      ? `Atenção: Detectado "${selectedRecord.anomalyType}". Recomenda-se verificação de horas extras não autorizadas para evitar passivo CLT.`
+                    {selectedRecord.hasAnomaly 
+                      ? `Atenção: Detectado "${selectedRecord.anomalyReason}". Recomenda-se verificação de horas extras não autorizadas para evitar passivo CLT.`
                       : 'Nenhuma inconformidade de horas encontrada neste registro. Ponto 100% aderente ao tempo de máquina.'}
                   </p>
                 </div>
@@ -187,12 +187,12 @@ export const WorkdayTimeline: React.FC<WorkdayTimelineProps> = ({
                     const row = [
                       `"${selectedRecord.employeeName}"`,
                       `"${selectedRecord.department}"`,
-                      `"${selectedRecord.sourceSystem}"`,
-                      `"${selectedRecord.clockIn} - ${selectedRecord.clockOut}"`,
-                      `${selectedRecord.activePCHours}h`,
-                      `${selectedRecord.correlationScore}%`,
-                      selectedRecord.anomalyDetected ? 'SIM' : 'NAO',
-                      `"${selectedRecord.anomalyType || 'N/A'}"`,
+                      `"${selectedRecord.systemSource}"`,
+                      `"${selectedRecord.pontoPunchIn} - ${selectedRecord.pontoPunchOut}"`,
+                      `${selectedRecord.agentActiveWorkedHours}h`,
+                      `${selectedRecord.correlationPct}%`,
+                      selectedRecord.hasAnomaly ? 'SIM' : 'NAO',
+                      `"${selectedRecord.anomalyReason || 'N/A'}"`,
                       `"SHA256_${Math.random().toString(36).substring(2)}${Date.now().toString(36)}"`
                     ];
                     const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(';'), row.join(';')].join('\n');
@@ -228,21 +228,21 @@ export const WorkdayTimeline: React.FC<WorkdayTimelineProps> = ({
             {pcLockPolicies.map((pol) => (
               <div key={pol.id} className="p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/70 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-slate-900 dark:text-white text-xs">{pol.department}</span>
+                  <span className="font-bold text-slate-900 dark:text-white text-xs">{pol.targetDepartment}</span>
                   <button
                     onClick={() => onTogglePcLockPolicy(pol.id)}
                     className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all border ${
-                      pol.enabled ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600'
+                      pol.active ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600'
                     }`}
                   >
-                    {pol.enabled ? '● BLOQUEIO ATIVO' : 'PAUSADO'}
+                    {pol.active ? '● BLOQUEIO ATIVO' : 'PAUSADO'}
                   </button>
                 </div>
 
                 <div className="space-y-1 text-xs text-slate-600 dark:text-slate-300 font-medium">
                   <div className="flex justify-between">
                     <span>Início do Bloqueio:</span>
-                    <span className="font-mono font-bold text-slate-900 dark:text-white">{pol.lockStartTime}</span>
+                    <span className="font-mono font-bold text-slate-900 dark:text-white">{pol.cutoffTime}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Tolerância de Graça:</span>
@@ -254,7 +254,7 @@ export const WorkdayTimeline: React.FC<WorkdayTimelineProps> = ({
                   <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold block mb-1">Mensagem exibida na tela do PC:</span>
                   <input
                     type="text"
-                    value={pol.customLockMessage}
+                    value={pol.lockMessage}
                     onChange={(e) => onUpdateLockMessage(pol.id, e.target.value)}
                     className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 font-medium"
                   />

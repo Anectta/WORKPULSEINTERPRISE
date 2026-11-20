@@ -30,14 +30,15 @@ function ruleToRow(r: AppClassificationRule): Record<string, unknown> {
   };
 }
 
-export async function fetchAppRules(): Promise<AppClassificationRule[]> {
+export async function fetchAppRules(): Promise<AppClassificationRule[] | null> {
   const { data, error } = await supabase
     .from('app_classification_rules')
     .select('*')
     .order('app_name');
   if (error) {
     console.error('[appRules.service] fetchAppRules error:', error.message);
-    return [];
+    // null = falha de leitura (diferente de tabela vazia)
+    return null;
   }
   return (data || []).map(rowToRule);
 }

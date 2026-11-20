@@ -21,29 +21,19 @@ const supabase = createClient(url, key);
 
 async function run() {
   console.log('Autenticando usuário de teste para validação de RLS...');
-  const email = 'audit.tester@workpulse.com.br';
-  const password = 'Password@123456';
+  const email = env.AUDIT_TEST_EMAIL;
+  const password = env.AUDIT_TEST_PASSWORD;
+  if (!email || !password) {
+    console.error("Defina AUDIT_TEST_EMAIL e AUDIT_TEST_PASSWORD no .env (conta de teste já existente no Supabase Auth).");
+    return;
+  }
 
   let { data: authData, error: authErr } = await supabase.auth.signInWithPassword({ email, password });
   
   if (authErr) {
-    console.log('Tentando cadastrar novo usuário de auditoria:', authErr.message);
-    const signUpRes = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          name: 'Auditor do Sistema',
-          role: 'Auditor Geral',
-          access_level: 'ADMIN_GERAL'
-        }
-      }
-    });
-    if (signUpRes.error) {
-      console.error('Erro no cadastro:', signUpRes.error.message);
-      return;
-    }
-    authData = signUpRes.data;
+    // Não cria contas automaticamente: o nível de acesso é definido apenas por um ADMIN_GERAL
+    console.error("Falha na autenticação da conta de teste:", authErr.message);
+    return;
   }
 
   console.log('Usuário autenticado com sucesso:', authData.user?.email || authData.session?.user?.email);

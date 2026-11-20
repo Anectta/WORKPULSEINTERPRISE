@@ -1,3 +1,5 @@
+// Ambiente isolado: DEVE ser o primeiro import (os módulos do servidor resolvem o diretório de dados ao carregar)
+import { TEST_DATA_DIR } from './testEnv';
 import { SecurityTestSuite } from '../server/security/securityTestSuite';
 import { E2EIntegrationSuite } from '../server/security/e2eIntegrationSuite';
 import { runCoreEngineTests } from '../src/backup-engine/tests/core-engine.test';
@@ -10,6 +12,8 @@ import { runFailureResilienceTests } from '../tests/failure/failure-resilience.t
 import { runSecurityHardeningTests } from '../tests/security/security-hardening.test';
 import { runE2EScenarios } from '../tests/integration/e2e-scenarios.test';
 import { runPerformanceAndStressTests } from '../tests/performance/performance-stress.test';
+import { runPlatformIntegrityTests } from '../tests/integration/platform-integrity.test';
+import { runAgentTests } from '../src/backup-agent/tests/agent.test';
 
 async function main() {
   const startTime = Date.now();
@@ -138,6 +142,25 @@ async function main() {
   if (!perfRes.passed) allPassed = false;
   console.log(`  Resultado: ${perfRes.passed ? 'PASSED' : 'FAILED'} (${perfPassed}/${perfRes.results.length} aprovados)\n`);
 
+  // 13. Integridade da plataforma (autenticação, persistência, contratos, mapeamentos)
+  console.log('▶ [13/14] Executando Suíte de Integridade da Plataforma (auditoria 2026-11-20)...');
+  console.log(`  Dados de teste isolados em: ${TEST_DATA_DIR}`);
+  const integrityRes = await runPlatformIntegrityTests();
+  const integrityPassed = integrityRes.results.filter(r => r.passed).length;
+  totalChecks += integrityRes.results.length;
+  passedChecks += integrityPassed;
+  if (!integrityRes.passed) allPassed = false;
+  console.log(`  Resultado: ${integrityRes.passed ? 'PASSED' : 'FAILED'} (${integrityPassed}/${integrityRes.results.length} aprovados)
+`);
+
+  // 14. Agente de backup (antes nunca executada pelo runner)
+  console.log('▶ [14/14] Executando Suíte do Agente de Backup...');
+  const agentRes = await runAgentTests();
+  totalChecks += 1;
+  if (agentRes.passed) passedChecks += 1; else allPassed = false;
+  console.log(`  Resultado: ${agentRes.passed ? 'PASSED' : 'FAILED'} (${agentRes.total} verificações)
+`);
+
   const totalDurationMs = Date.now() - startTime;
   console.log('================================================================================');
   console.log(`                  RELATÓRIO CONSOLIDADO — ETAPA 14`);
@@ -154,7 +177,7 @@ async function main() {
     console.error('❌ Uma ou mais suítes apresentaram falhas.');
     process.exit(1);
   } else {
-    console.log('🎉 TODAS AS 12 SUÍTES DE TESTE COMPLETAS PASSARAM COM 100% DE SUCESSO.');
+    console.log('🎉 TODAS AS 14 SUÍTES DE TESTE COMPLETAS PASSARAM COM 100% DE SUCESSO.');
   }
 }
 

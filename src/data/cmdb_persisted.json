@@ -3078,7 +3078,7 @@
       "tokenHash": "245e6650e1100707f43e51dd189cd83eab4514b72b282225cf59b3f6f81a9fef",
       "maxUses": 1000,
       "currentUses": 150,
-      "status": "active",
+      "status": "revoked",
       "expiresAt": "2027-12-31T23:59:59.000Z",
       "createdBy": "admin@workpulse.io",
       "createdAt": "2026-01-01T00:00:00.000Z"
@@ -3091,7 +3091,7 @@
       "tokenHash": "029bc8e5b94117084471889280b0e14b1c5081b4363fe3be0b056092bad9050a",
       "maxUses": 50,
       "currentUses": 5,
-      "status": "active",
+      "status": "revoked",
       "expiresAt": "2026-09-14T15:23:14.456Z",
       "createdBy": "Carlos Amoroso (Administrador)",
       "createdAt": "2026-09-07T15:23:14.460Z"
@@ -3182,6 +3182,14 @@
     }
   ],
   "agentAuditLogs": [
+    {
+      "id": "agt-aud-1795177722486-3k2z",
+      "tenantId": "tenant-demo",
+      "action": "AUTH_FAILED",
+      "ipAddress": "127.0.0.1",
+      "details": "Requisição de agente sem token de identidade recusada.",
+      "timestamp": "2026-11-20T12:28:42.486Z"
+    },
     {
       "id": "agt-aud-1788796334855-z6b5",
       "tenantId": "tenant-demo",

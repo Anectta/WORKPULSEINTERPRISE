@@ -20,8 +20,8 @@ BEGIN
         NEW.id,
         COALESCE(NEW.raw_user_meta_data->>'name', split_part(NEW.email, '@', 1)),
         NEW.email,
-        COALESCE(NEW.raw_user_meta_data->>'role', 'Administrador do Sistema'),
-        COALESCE(NEW.raw_user_meta_data->>'access_level', 'ADMIN_GERAL'),
+        'Colaborador', -- papel nunca vem de raw_user_meta_data (auditoria 2026-11-20)
+        'COLABORADOR', -- nível mínimo; promoção somente por ADMIN_GERAL
         'Ativo',
         NOW(),
         NOW()
@@ -38,10 +38,7 @@ CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
--- Auto-confirmar e-mails existentes (para liberar login imediato em produção/desenvolvimento)
-UPDATE auth.users 
-SET email_confirmed_at = NOW() 
-WHERE email_confirmed_at IS NULL;
+-- (removido na auditoria 2026-11-20) Não confirmar e-mails em massa: a verificação de e-mail deve permanecer ativa.
 
 -- 2. SEED: EMPLOYEES (10 Colaboradores Monitorados)
 INSERT INTO public.employees (

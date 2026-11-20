@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import { signIn, signUp } from '../../services/supabase/auth.service';
+import { signIn, signOut } from '../../services/supabase/auth.service';
+import { isSupabaseConfigured } from '../../lib/supabaseClient';
+import { isAuthorizedEmail } from '../../services/sessionSecurity';
+import type { Session } from '@supabase/supabase-js';
 import { Activity, Lock, Mail, Eye, EyeOff, AlertCircle, CheckCircle2, Loader2, UserPlus, LogIn } from 'lucide-react';
 
 interface LoginPageProps {
-  onLoginSuccess: (session?: any) => void;
+  onLoginSuccess: (session: Session) => void;
 }
 
 export function LoginPage({ onLoginSuccess }: LoginPageProps) {
@@ -31,53 +34,25 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
     setIsLoading(true);
 
     try {
-      // Validates master administrator account
-      if (cleanEmail === 'anectta@anectta.com.br' && password === 'Ant102030!#') {
-        // Attempt background Supabase auth if endpoint is available
-        signIn(cleanEmail, password).catch(() => {});
-
-        const now = Date.now();
-        const masterSession: any = {
-          access_token: 'wp-master-anectta-token-' + now,
-          refresh_token: 'wp-master-anectta-refresh',
-          expires_at: Math.floor(now / 1000) + 86400 * 30,
-          created_at_epoch: now,
-          issued_at: now,
-          user: {
-            id: 'usr-admin-anectta',
-            email: 'anectta@anectta.com.br',
-            user_metadata: {
-              name: 'ANECTTA Soluções em Tecnologia',
-              role: 'Administrador do Sistema',
-              access_level: 'ADMIN_GERAL'
-            },
-            app_metadata: {},
-            aud: 'authenticated',
-            created_at: new Date(now).toISOString()
-          }
-        };
-
-        localStorage.setItem('wp_auth_local_session', JSON.stringify(masterSession));
-        localStorage.setItem('wp_currentUser', JSON.stringify({
-          id: 'usr-admin-anectta',
-          name: 'ANECTTA Soluções em Tecnologia',
-          email: 'anectta@anectta.com.br',
-          role: 'Administrador do Sistema',
-          accessLevel: 'ADMIN_GERAL',
-          avatar: '/anectta-logo.png',
-          department: 'Diretoria & TI',
-          loginTime: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-          ipAddress: '192.168.1.100',
-          computerHost: 'ADM-ANECTTA-MASTER',
-          status: 'Ativo'
-        }));
-
-        onLoginSuccess(masterSession);
+      if (!isSupabaseConfigured()) {
+        setError('Autenticação indisponível: Supabase não configurado (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY).');
         return;
       }
 
-      // Any other account has been eliminated
-      setError('Credenciais inválidas. Usuário ou senha incorretos.');
+      // Autenticação real no Supabase Auth (a senha nunca fica no código nem no navegador)
+      const result = await signIn(cleanEmail, password);
+      if (!result.success || !result.session) {
+        setError(result.error || 'Credenciais inválidas. Usuário ou senha incorretos.');
+        return;
+      }
+
+      if (!isAuthorizedEmail(result.user?.email)) {
+        await signOut().catch(() => {});
+        setError('Esta conta não está autorizada a acessar o WorkPulse.');
+        return;
+      }
+
+      onLoginSuccess(result.session);
     } catch (err) {
       setError('Erro de conexão ao validar credenciais.');
     } finally {

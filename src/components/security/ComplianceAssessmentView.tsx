@@ -61,9 +61,9 @@ export const ComplianceAssessmentView: React.FC = () => {
         fetch('/api/v1/security/compliance/summary').then(r => r.json())
       ]);
 
-      if (cRes.success) setControls(cRes.data);
-      if (mRes.success) setEvidenceMatrix(mRes.data);
-      if (sRes.success) setSummaries(sRes.data);
+      if (cRes.success && Array.isArray(cRes.data)) setControls(cRes.data);
+      if (mRes.success && Array.isArray(mRes.data)) setEvidenceMatrix(mRes.data);
+      if (sRes.success && Array.isArray(sRes.data)) setSummaries(sRes.data);
     } catch (err) {
       console.error('Erro ao carregar dados de conformidade:', err);
     } finally {
@@ -115,10 +115,10 @@ export const ComplianceAssessmentView: React.FC = () => {
     const headers = ['Código', 'Framework', 'Título', 'Status', 'Evidências', 'Gaps', 'Plano de Ação'];
     const rows = controls.map(c => [
       c.code,
-      c.framework,
+      c.frameworkCode,
       `"${c.title.replace(/"/g, '""')}"`,
       c.status,
-      c.evidenceCount,
+      c.evidenceCount ?? c.evidenceIds?.length ?? 0,
       `"${(c.gapDescription || '').replace(/"/g, '""')}"`,
       `"${(c.actionPlan || '').replace(/"/g, '""')}"`
     ]);
@@ -139,7 +139,7 @@ export const ComplianceAssessmentView: React.FC = () => {
     const matchesStatus = selectedStatus === 'ALL' || item.status === selectedStatus;
     const matchesSearch = searchTerm === '' ||
       item.controlCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.controlTitle.toLowerCase().includes(searchTerm.toLowerCase());
+      (item.controlTitle ?? item.title ?? '').toLowerCase().includes(searchTerm.toLowerCase());
     return matchesFramework && matchesStatus && matchesSearch;
   });
 
@@ -330,12 +330,12 @@ export const ComplianceAssessmentView: React.FC = () => {
                       </td>
 
                       <td className="py-3.5 px-4 space-y-1">
-                        {item.linkedFindings.length === 0 ? (
+                        {(item.linkedFindings ?? []).length === 0 ? (
                           <span className="text-[11px] text-emerald-400 flex items-center gap-1">
                             <CheckCircle2 className="w-3.5 h-3.5" /> Nenhum achado
                           </span>
                         ) : (
-                          item.linkedFindings.map(f => (
+                          (item.linkedFindings ?? []).map(f => (
                             <div key={f.id} className="flex items-center gap-1.5 text-[11px]">
                               <span className={`px-1 rounded text-[9px] font-bold ${
                                 f.severity === 'CRITICAL' ? 'bg-rose-500/20 text-rose-400' :
@@ -410,7 +410,7 @@ export const ComplianceAssessmentView: React.FC = () => {
                   <span className="font-mono text-amber-400 font-bold text-xs">{editingControl.code}</span>
                   <h3 className="text-sm font-bold text-white">{editingControl.title}</h3>
                 </div>
-                <span className="text-[11px] text-slate-400">{editingControl.framework}</span>
+                <span className="text-[11px] text-slate-400">{editingControl.frameworkCode}</span>
               </div>
               <button onClick={() => setEditingControl(null)} className="text-slate-400 hover:text-white">
                 <X className="w-4 h-4" />

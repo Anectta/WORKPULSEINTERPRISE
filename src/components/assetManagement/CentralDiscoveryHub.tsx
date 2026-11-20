@@ -45,6 +45,7 @@ import { DiscoveredAssetDetailModal } from './DiscoveredAssetDetailModal';
 import { DuplicateAnalysisModal } from './DuplicateAnalysisModal';
 import { ApproveAssetModal } from './ApproveAssetModal';
 import { matchDiscoveredAsset, safeMergeAssets } from '../../utils/assetMatchingEngine';
+import { DemoNotice } from '../DemoNotice';
 
 interface CentralDiscoveryHubProps {
   existingAssets: ITAsset[];
@@ -194,7 +195,7 @@ export const CentralDiscoveryHub: React.FC<CentralDiscoveryHubProps> = ({
     
     setTimeout(() => {
       setIsScanning(false);
-      setScanMessage('Varredura concluída com sucesso! 7 ativos checados, telemetria sincronizada.');
+      setScanMessage('Simulação concluída: dados de teste atualizados (nenhuma rede real foi varrida).');
       setTimeout(() => setScanMessage(null), 5000);
     }, 1800);
   };
@@ -306,17 +307,46 @@ export const CentralDiscoveryHub: React.FC<CentralDiscoveryHubProps> = ({
     }
   };
 
+  /**
+   * Localiza o ativo existente que corresponde ao descoberto, por ordem de confiança:
+   * vínculo já registrado, serial, MAC (normalizado) e, por último, nome exato.
+   * Sem correspondência, retorna undefined: nunca mescla num ativo arbitrário.
+   */
+  const findDuplicateTarget = (discovered: InventoryDiscoveredAsset): ITAsset | undefined => {
+    const normSerial = (v?: string) => (v || '').trim().toUpperCase();
+    const normMac = (v?: string) => (v || '').replace(/[^0-9a-f]/gi, '').toLowerCase();
+    const emptyMac = (m: string) => !m || /^0+$/.test(m);
+
+    if (discovered.matchedAssetId) {
+      const byId = existingAssets.find(a => a.id === discovered.matchedAssetId);
+      if (byId) return byId;
+    }
+    const serial = normSerial(discovered.serialNumber);
+    if (serial) {
+      const bySerial = existingAssets.find(a => normSerial(a.serialNumber) === serial);
+      if (bySerial) return bySerial;
+    }
+    const mac = normMac(discovered.macAddress);
+    if (!emptyMac(mac)) {
+      const byMac = existingAssets.find(a => normMac(a.macAddress) === mac);
+      if (byMac) return byMac;
+    }
+    const name = (discovered.duplicateTargetName || '').trim().toLowerCase();
+    if (name) return existingAssets.find(a => a.name.trim().toLowerCase() === name);
+    return undefined;
+  };
+
+  const reportNoDuplicateTarget = (discovered: InventoryDiscoveredAsset) => {
+    setScanMessage(`Nenhum ativo existente corresponde a "${discovered.name || discovered.serialNumber || discovered.id}" (serial, MAC ou nome). Nada foi mesclado.`);
+    setTimeout(() => setScanMessage(null), 6000);
+  };
+
   // Handle Analyze Duplicate
   const handleAnalyzeDuplicate = (discovered: InventoryDiscoveredAsset) => {
-    // Find matching target in existing assets or match candidate
-    let target = existingAssets.find(a => 
-      a.name.toLowerCase() === (discovered.duplicateTargetName || 'pc-023').toLowerCase() ||
-      a.serialNumber === discovered.serialNumber ||
-      a.macAddress === discovered.macAddress
-    );
-
-    if (!target && existingAssets.length > 0) {
-      target = existingAssets[0];
+    const target = findDuplicateTarget(discovered);
+    if (!target) {
+      reportNoDuplicateTarget(discovered);
+      return;
     }
 
     if (target) {
@@ -385,6 +415,9 @@ export const CentralDiscoveryHub: React.FC<CentralDiscoveryHubProps> = ({
   return (
     <div className="space-y-6 font-sans">
       
+      <DemoNotice>
+        "Executar Varredura Agora" e as evidências de duplicidade usam uma massa de dados de teste; nenhum dispositivo real é varrido nesta tela. Revise com cuidado antes de aprovar ou mesclar ativos.
+      </DemoNotice>
       {/* HEADER CARD OF CENTRAL DE DESCOBERTA */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="flex items-center space-x-4">
@@ -765,7 +798,7 @@ export const CentralDiscoveryHub: React.FC<CentralDiscoveryHubProps> = ({
           ) : (
             <div className="space-y-4">
               {duplicatesList.map(item => {
-                const targetName = item.duplicateTargetName || 'PC-023';
+                const targetName = item.duplicateTargetName || findDuplicateTarget(item)?.name || '(sem correspondência)';
                 const similarity = item.duplicateSimilarityPct || 94;
 
                 return (
@@ -817,8 +850,9 @@ export const CentralDiscoveryHub: React.FC<CentralDiscoveryHubProps> = ({
 
                       <button
                         onClick={() => {
-                          const target = existingAssets.find(a => a.name.toLowerCase() === targetName.toLowerCase()) || existingAssets[0];
+                          const target = findDuplicateTarget(item);
                           if (target) handleMergeDuplicate(item, target);
+                          else reportNoDuplicateTarget(item);
                         }}
                         className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-md shadow-amber-600/20 transition-all flex items-center space-x-1.5 cursor-pointer"
                         title="Mesclar evidências no ativo existente (não exclui o ativo existente)"

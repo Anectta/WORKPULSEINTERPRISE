@@ -22,8 +22,9 @@ import {
   INITIAL_CMDB_ITEMS, 
   INITIAL_RELATIONSHIPS, 
   INITIAL_BUSINESS_SERVICES, 
-  INITIAL_CMDB_CONTRACTS, 
-  INITIAL_CMDB_HISTORY 
+  INITIAL_CMDB_CONTRACTS,
+  INITIAL_CMDB_HISTORY,
+  INITIAL_CMDB_TICKETS
 } from '../../data/cmdbInitialData';
 
 import { CmdbOverviewDashboard } from './CmdbOverviewDashboard';
@@ -62,7 +63,13 @@ export const CmdbModule: React.FC = () => {
   // Compute Health Score dynamically
   const healthScore: CMDBHealthScore = React.useMemo(() => {
     const total = items.length;
-    if (total === 0) return { overallScore: 0, grade: 'C', metrics: { relationshipsPct: 0, assignedOwnersPct: 0, contractsLinkedPct: 0, activeMonitoringPct: 0 }, recommendations: [] };
+    if (total === 0) return {
+      overallScore: 0,
+      grade: 'C',
+      metrics: { completenessPct: 0, relationshipsPct: 0, assignedOwnersPct: 0, assignedLocationsPct: 0, contractsLinkedPct: 0, activeMonitoringPct: 0 },
+      counts: { totalCIs: 0, orphanedCIs: 0, missingOwners: 0, missingLocations: 0, missingContracts: 0, outdatedTelemetry: 0 },
+      recommendations: []
+    };
 
     const withRel = items.filter(i => relationships.some(r => r.sourceCiId === i.id || r.targetCiId === i.id)).length;
     const withOwner = items.filter(i => i.responsible && i.responsible.trim().length > 0).length;
@@ -73,6 +80,9 @@ export const CmdbModule: React.FC = () => {
     const ownerPct = Math.round((withOwner / total) * 100);
     const contractPct = Math.round((withContract / total) * 100);
     const monPct = Math.round((withMonitoring / total) * 100);
+    const withLocation = items.filter(i => i.location && String(i.location).trim().length > 0).length;
+    const locPct = Math.round((withLocation / total) * 100);
+    const completenessPct = Math.round((relPct + ownerPct + locPct + contractPct + monPct) / 5);
 
     const overall = Math.round((relPct * 0.35) + (ownerPct * 0.25) + (contractPct * 0.2) + (monPct * 0.2));
     const grade = overall >= 90 ? 'A' : overall >= 75 ? 'B' : overall >= 60 ? 'C' : 'D';
@@ -81,24 +91,34 @@ export const CmdbModule: React.FC = () => {
       overallScore: overall,
       grade,
       metrics: {
+        completenessPct,
         relationshipsPct: relPct,
         assignedOwnersPct: ownerPct,
+        assignedLocationsPct: locPct,
         contractsLinkedPct: contractPct,
         activeMonitoringPct: monPct
+      },
+      counts: {
+        totalCIs: total,
+        orphanedCIs: total - withRel,
+        missingOwners: total - withOwner,
+        missingLocations: total - withLocation,
+        missingContracts: total - withContract,
+        outdatedTelemetry: total - withMonitoring
       },
       recommendations: [
         {
           id: 'rec-1',
           title: 'Vincular CIs Órfãos',
           description: `${total - withRel} equipamento(s) não possuem conexões de topologia mapeadas.`,
-          severity: 'medium',
+          priority: 'media',
           actionLabel: 'Ver Topologia'
         },
         {
           id: 'rec-2',
           title: 'Associar Contratos de Garantia',
           description: `${total - withContract} equipamento(s) sem contrato de SLA ou garantia associados.`,
-          severity: 'low',
+          priority: 'baixa',
           actionLabel: 'Vincular Contratos'
         }
       ]
@@ -667,11 +687,13 @@ export const CmdbModule: React.FC = () => {
       {/* 4. MODALS */}
       {selectedCi && (
         <CmdbCiDetailModal
-          item={selectedCi}
+          ci={selectedCi}
           relationships={relationships}
-          allItems={items}
+          tickets={INITIAL_CMDB_TICKETS}
+          contracts={contracts}
+          history={history}
           onClose={() => setSelectedCi(null)}
-          onOpenImpact={ci => {
+          onOpenImpactAnalysis={ci => {
             setSelectedCi(null);
             setImpactCi(ci);
             setActiveTab('impacto');

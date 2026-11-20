@@ -1,26 +1,31 @@
-# Arquitetura Desktop (Tauri) — WorkPulse Enterprise
+# Aplicação Desktop — estado atual
 
-## 1. Visão Geral
+> **Atualizado na auditoria de 20/11/2026.** A versão anterior deste documento descrevia
+> um aplicativo desktop Tauri (MSI, `.deb`, `.dmg`, IPC por Named Pipe) que **não existe
+> no repositório**.
 
-A aplicação desktop do WorkPulse Enterprise é construída utilizando o ecossistema **Tauri** (Rust + WebView + React), proporcionando um executável nativo leve e seguro.
+## Como o WorkPulse roda hoje
 
----
+O WorkPulse Enterprise é uma **aplicação web**:
 
-## 2. Isolamento e Comunicação Local
+- **Front-end:** React 19 + Vite (`src/`), servida pelo próprio servidor.
+- **Servidor:** Node.js/Express (`server.ts`, porta 3000), que expõe a API em `/api`.
+- **Banco de dados:** Supabase (PostgreSQL + Auth).
 
-- **Zero dependência de Vercel para execução local**: A aplicação desktop pode operar totalmente isolada ou conectada ao Control Plane SaaS.
-- **Comunicação com o Agent**: A UI do Desktop comunica-se com o Backup Agent local através de um canal IPC seguro (Named Pipe no Windows ou Unix Domain Socket no Linux/macOS) utilizando autenticação de token local.
-- **Segurança Tauri**:
-  - Content Security Policy (**CSP**) restritiva.
-  - Permissões explícitas no `tauri.conf.json`.
-  - Sem injeção de shell arbitrária.
-  - Execução protegida com isolamento de privilégios.
+O acesso é pelo navegador (`http://<servidor>:3000`). Não há executável instalável,
+empacotamento Tauri/Electron nem `tauri.conf.json`.
 
----
+## Componentes que executam nas estações
 
-## 3. Empacotamento Multiplataforma
+| Componente | Estado |
+|---|---|
+| Agente de inventário (scripts PowerShell/Bash gerados na aba LGPD/GPO) | Enviam dados à API com enrollment token gerado em CMDB > API de Agentes |
+| Agente de backup (`src/backup-agent`) | Código e testes existem, mas **não há control plane no servidor** nem empacotamento: não está pronto para implantação |
 
-O desktop é compilado para:
-- **Windows**: Instalador MSI e binário executável assinado com certificado Authenticode.
-- **Linux**: Pacotes `.deb`, `.rpm` e `.AppImage`.
-- **macOS**: Pacote `.dmg` assinado com Notarization da Apple.
+## Se uma versão desktop for necessária
+
+Seria um projeto novo, com pelo menos:
+
+1. Empacotamento (Tauri ou Electron) da SPA existente.
+2. Configuração do endereço do servidor e autenticação via Supabase no app.
+3. Assinatura de código (Authenticode, Apple Notarization) e pipeline de build no CI.

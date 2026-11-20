@@ -229,11 +229,11 @@ export const ProductivityRankings: React.FC<ProductivityRankingsProps> = ({
               <div className="space-y-1 text-xs text-slate-600 dark:text-slate-400 font-medium pt-2 border-t border-slate-100 dark:border-slate-800">
                 <div className="flex justify-between">
                   <span>Equipe Ativa:</span>
-                  <span className="font-bold text-slate-900 dark:text-white">{dept.employeeCount} Colaboradores</span>
+                  <span className="font-bold text-slate-900 dark:text-white">{dept.totalEmployees} Colaboradores</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Horas Produtivas Acumuladas:</span>
-                  <span className="font-mono font-bold text-slate-900 dark:text-white">{dept.totalProductiveHours.toFixed(1)}h</span>
+                  <span>Tempo Produtivo:</span>
+                  <span className="font-mono font-bold text-slate-900 dark:text-white">{(dept.productiveHoursPct ?? 0).toFixed(1)}%</span>
                 </div>
               </div>
             </div>

@@ -342,7 +342,7 @@ export const SecurityModule: React.FC = () => {
             setCurrentTab('scans');
           }}
           onNavigateTab={(tab) => {
-            if (tab === 'pentest' || tab === 'scans' || tab === 'findings' || tab === 'scopes' || tab === 'audit') {
+            if (tab === 'scans' || tab === 'findings' || tab === 'scopes' || tab === 'audit') {
               setCurrentTab(tab);
             }
           }}

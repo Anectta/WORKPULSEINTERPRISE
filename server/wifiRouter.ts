@@ -1,4 +1,5 @@
 import { Router, Request, Response } from "express";
+import { readJsonFile, writeJsonFileAtomic } from "./persistence/jsonFileStore";
 import fs from "fs";
 import path from "path";
 import {
@@ -26,8 +27,9 @@ import {
 } from "../src/types/wifiPulse";
 
 const router = Router();
-const DATA_DIR = path.join(process.cwd(), "src", "data");
+import { DATA_DIR } from "./persistence/dataDir";
 const WIFI_PERSIST_FILE = path.join(DATA_DIR, "wifi_persisted.json");
+const MAX_HISTORIC_DIAGNOSTICS = 500;
 
 interface WifiStore {
   currentConnection: WifiConnectionStatus;
@@ -38,13 +40,14 @@ interface WifiStore {
 }
 
 function loadWifiStore(): WifiStore {
-  try {
-    if (fs.existsSync(WIFI_PERSIST_FILE)) {
-      const content = fs.readFileSync(WIFI_PERSIST_FILE, "utf-8");
-      return JSON.parse(content);
+  const result = readJsonFile<WifiStore>(WIFI_PERSIST_FILE);
+  if (result.status === "ok") {
+    const loaded = result.data;
+    // Limita o histórico de diagnósticos para o arquivo não crescer indefinidamente
+    if (Array.isArray(loaded.historicDiagnostics) && loaded.historicDiagnostics.length > MAX_HISTORIC_DIAGNOSTICS) {
+      loaded.historicDiagnostics = loaded.historicDiagnostics.slice(0, MAX_HISTORIC_DIAGNOSTICS);
     }
-  } catch (err) {
-    console.error("Erro ao ler wifi_persisted.json, usando dados iniciais:", err);
+    return loaded;
   }
 
   const initialStore: WifiStore = {
@@ -56,8 +59,7 @@ function loadWifiStore(): WifiStore {
   };
 
   try {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-    fs.writeFileSync(WIFI_PERSIST_FILE, JSON.stringify(initialStore, null, 2), "utf-8");
+    writeJsonFileAtomic(WIFI_PERSIST_FILE, initialStore);
   } catch (e) {
     console.error("Erro ao salvar store inicial do wifi:", e);
   }
@@ -67,8 +69,10 @@ function loadWifiStore(): WifiStore {
 
 function saveWifiStore(store: WifiStore) {
   try {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-    fs.writeFileSync(WIFI_PERSIST_FILE, JSON.stringify(store, null, 2), "utf-8");
+    if (store.historicDiagnostics.length > MAX_HISTORIC_DIAGNOSTICS) {
+      store.historicDiagnostics = store.historicDiagnostics.slice(0, MAX_HISTORIC_DIAGNOSTICS);
+    }
+    writeJsonFileAtomic(WIFI_PERSIST_FILE, store);
   } catch (err) {
     console.error("Erro ao salvar wifi_persisted.json:", err);
   }
@@ -187,7 +191,8 @@ router.post("/scan", (req: Request, res: Response) => {
 
   res.json({
     status: "success",
-    message: "Varredura do espectro RF concluída com sucesso.",
+    simulated: true,
+    message: "Simulação: leitura de sinal atualizada. O servidor não acessa o rádio Wi-Fi da estação.",
     data
   });
 });
@@ -237,7 +242,8 @@ router.post("/switch-network", (req: Request, res: Response) => {
 
   res.json({
     status: "success",
-    message: `Migração efetuada para ${store.currentConnection.ssid} (${store.currentConnection.band}, Canal ${store.currentConnection.channel}).`,
+    simulated: true,
+    message: `Simulação: rede ${store.currentConnection.ssid} selecionada no painel. Nenhuma conexão real foi alterada.`,
     data
   });
 });
@@ -251,9 +257,7 @@ router.post("/switch-channel", (req: Request, res: Response) => {
     store.currentConnection.channel = Number(channel);
     if (band) store.currentConnection.band = band;
 
-    // Se mudou para um canal melhor, melhora a qualidade e o link rate
-    store.currentConnection.rssi = Math.min(-42, store.currentConnection.rssi + 4);
-    store.currentConnection.snr = Math.abs(store.currentConnection.rssi - store.currentConnection.noise);
+    // Sem melhoria fictícia de sinal: a troca de canal não é aplicada a nenhum equipamento real
     store.currentConnection.lastScanTimestamp = new Date().toISOString();
   }
 
@@ -262,7 +266,8 @@ router.post("/switch-channel", (req: Request, res: Response) => {
 
   res.json({
     status: "success",
-    message: `Canal alterado para ${store.currentConnection.channel} na banda ${store.currentConnection.band}.`,
+    simulated: true,
+    message: `Simulação: canal ${store.currentConnection.channel} (${store.currentConnection.band}) registrado no painel. O roteador não foi reconfigurado.`,
     data
   });
 });
@@ -286,6 +291,7 @@ router.post("/dual-test", (req: Request, res: Response) => {
 
   res.json({
     status: "success",
+    simulated: !internet,
     data: dualResult
   });
 });
@@ -306,7 +312,8 @@ router.post("/arp-scan", (req: Request, res: Response) => {
 
   res.json({
     status: "success",
-    message: `Varredura ARP concluída: ${store.lanDevices.length} dispositivos mapeados na sub-rede.`,
+    simulated: true,
+    message: `Simulação: lista de ${store.lanDevices.length} dispositivos atualizada (sem varredura ARP real).`,
     data
   });
 });
@@ -324,7 +331,8 @@ router.post("/agent-collect", (req: Request, res: Response) => {
 
   res.json({
     status: "success",
-    message: "Agente Local executou coleta com sucesso em nível de kernel/driver.",
+    simulated: true,
+    message: "Simulação: nenhum agente local coletou dados desta estação.",
     data
   });
 });

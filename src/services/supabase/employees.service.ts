@@ -65,14 +65,15 @@ function employeeToRow(e: Employee): Record<string, unknown> {
   };
 }
 
-export async function fetchEmployees(): Promise<Employee[]> {
+export async function fetchEmployees(): Promise<Employee[] | null> {
   const { data, error } = await supabase
     .from('employees')
     .select('*')
     .order('name');
   if (error) {
     console.error('[employees.service] fetchEmployees error:', error.message);
-    return [];
+    // null = falha de leitura (diferente de tabela vazia)
+    return null;
   }
   return (data || []).map(rowToEmployee);
 }

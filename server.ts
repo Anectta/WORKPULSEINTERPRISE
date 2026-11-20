@@ -8,8 +8,19 @@ import cmdbRouter from "./server/cmdbRouter";
 import wifiRouter from "./server/wifiRouter";
 import securityRouter from "./server/securityRouter";
 import { SecurityHealthService } from "./server/security/securityHealth";
+import { apiAuthentication } from "./server/authMiddleware";
+import { readJsonFile, writeJsonFileAtomic } from "./server/persistence/jsonFileStore";
+import { dataFile } from "./server/persistence/dataDir";
 
 dotenv.config();
+
+// Erros em tarefas assíncronas de fundo (ex.: execução de pentest) não derrubam o servidor
+process.on("unhandledRejection", (reason) => {
+  console.error("[server] Promise rejeitada sem tratamento:", reason);
+});
+process.on("uncaughtException", (err) => {
+  console.error("[server] Exceção não capturada:", err);
+});
 
 const app = express();
 const PORT = 3000;
@@ -31,6 +42,9 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json({ limit: '10mb' }));
+
+// Autenticação obrigatória (Supabase JWT) para toda a API, exceto rotas públicas declaradas
+app.use("/api", apiAuthentication);
 
 // Mount CMDB & Agent API Router version 1
 app.use("/api/v1", cmdbRouter);
@@ -205,47 +219,33 @@ Responda em formato JSON com os campos:
 });
 
 // Topology Data Persistent Routes
-const TOPOLOGY_FILE_PATH = path.join(process.cwd(), "src", "data", "topology_saved.json");
+const TOPOLOGY_FILE_PATH = dataFile("topology_saved.json");
 
 app.get("/api/topology", (req, res) => {
-  try {
-    if (fs.existsSync(TOPOLOGY_FILE_PATH)) {
-      const fileData = fs.readFileSync(TOPOLOGY_FILE_PATH, "utf-8");
-      return res.json(JSON.parse(fileData));
-    }
-  } catch (error: any) {
-    console.error("Erro ao ler arquivo de topologia:", error);
-  }
+  const result = readJsonFile<unknown>(TOPOLOGY_FILE_PATH);
+  if (result.status === "ok") return res.json(result.data);
   res.json(null);
 });
 
 app.post("/api/topology", (req, res) => {
+  const topologyData = req.body;
+  // Validação mínima: a topologia é sempre um objeto JSON (nunca array/valor solto)
+  if (!topologyData || typeof topologyData !== "object" || Array.isArray(topologyData)) {
+    return res.status(400).json({ error: "Formato de topologia inválido." });
+  }
   try {
-    const topologyData = req.body;
-    fs.mkdirSync(path.dirname(TOPOLOGY_FILE_PATH), { recursive: true });
-    fs.writeFileSync(TOPOLOGY_FILE_PATH, JSON.stringify(topologyData, null, 2), "utf-8");
+    writeJsonFileAtomic(TOPOLOGY_FILE_PATH, topologyData);
     res.json({ success: true, savedAt: new Date().toISOString() });
   } catch (error: any) {
     console.error("Erro ao salvar arquivo de topologia:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "Falha ao salvar a topologia." });
   }
 });
 
-// Power BI / FTP Live Feed endpoint simulation
-app.get("/api/export/powerbi-feed", (req, res) => {
-  res.json({
-    updatedAt: new Date().toISOString(),
-    companyName: "WorkPulse Enterprise Corp",
-    totalEmployeesTracked: 148,
-    metricsSummary: {
-      avgProductivityPct: 81.4,
-      totalProductiveHours: 5420,
-      totalIdleHours: 410,
-      totalUnproductiveHours: 630,
-      lockedStationsPostShift: 12
-    },
-    datasetUrl: "/api/export/download-csv"
-  });
+
+// Rotas /api inexistentes respondem 404 em JSON (em vez do HTML da SPA com status 200)
+app.use("/api", (req, res) => {
+  res.status(404).json({ error: "NOT_FOUND", message: `Rota de API inexistente: ${req.method} ${req.originalUrl}` });
 });
 
 async function startServer() {

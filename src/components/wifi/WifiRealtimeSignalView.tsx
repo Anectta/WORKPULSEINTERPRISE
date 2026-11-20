@@ -309,7 +309,7 @@ export const WifiRealtimeSignalView: React.FC<WifiRealtimeSignalViewProps> = ({
                       fontSize="9"
                       fontFamily="monospace"
                     >
-                      {p.timestamp}
+                      {p.time}
                     </text>
                   )}
                 </g>

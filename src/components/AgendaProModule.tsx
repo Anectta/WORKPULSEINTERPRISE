@@ -44,6 +44,31 @@ import {
   Info
 } from 'lucide-react';
 import { CurrentUser } from '../types';
+import { useSupabaseCollectionSync } from '../hooks/useSupabaseCollectionSync';
+import { fetchDocuments, upsertDocuments, deleteDocument, DocumentCollection } from '../services/supabase/documents.service';
+
+/** Lê uma lista do localStorage sem derrubar a tela se o conteúdo estiver corrompido. */
+function readStoredList<T>(key: string, fallback: T[]): T[] {
+  try {
+    const saved = localStorage.getItem(key);
+    const parsed = saved ? JSON.parse(saved) : null;
+    return Array.isArray(parsed) ? parsed : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function useAgendaSync<T extends { id: string }>(
+  items: T[], collection: DocumentCollection, label: string, ready: boolean, onError: (msg: string) => void
+) {
+  return useSupabaseCollectionSync(items, {
+    label: `agenda (${label})`,
+    enabled: ready,
+    upsertMany: (changed: T[]) => upsertDocuments(collection, changed),
+    remove: (id: string) => deleteDocument(collection, id),
+    onError,
+  });
+}
 
 /* ==========================================================================
    1. TYPES & INTERFACES
@@ -458,23 +483,19 @@ export const AgendaProModule: React.FC<AgendaProModuleProps> = ({
 }) => {
   // Persistence state
   const [events, setEvents] = useState<CalendarEvent[]>(() => {
-    const saved = localStorage.getItem('applet_agenda_pro_events');
-    return saved ? JSON.parse(saved) : INITIAL_EVENTS;
+    return readStoredList('applet_agenda_pro_events', INITIAL_EVENTS);
   });
 
   const [contacts, setContacts] = useState<Contact[]>(() => {
-    const saved = localStorage.getItem('applet_agenda_pro_contacts');
-    return saved ? JSON.parse(saved) : INITIAL_CONTACTS;
+    return readStoredList('applet_agenda_pro_contacts', INITIAL_CONTACTS);
   });
 
   const [tasks, setTasks] = useState<TaskItem[]>(() => {
-    const saved = localStorage.getItem('applet_agenda_pro_tasks');
-    return saved ? JSON.parse(saved) : INITIAL_TASKS;
+    return readStoredList('applet_agenda_pro_tasks', INITIAL_TASKS);
   });
 
   const [occurrences, setOccurrences] = useState<TechnicalOccurrence[]>(() => {
-    const saved = localStorage.getItem('applet_agenda_pro_occurrences');
-    return saved ? JSON.parse(saved) : INITIAL_OCCURRENCES;
+    return readStoredList('applet_agenda_pro_occurrences', INITIAL_OCCURRENCES);
   });
 
   // UI state
@@ -510,6 +531,46 @@ export const AgendaProModule: React.FC<AgendaProModuleProps> = ({
   useEffect(() => {
     localStorage.setItem('applet_agenda_pro_occurrences', JSON.stringify(occurrences));
   }, [occurrences]);
+
+  // Persistência no Supabase (tabela app_documents): a agenda deixa de existir só neste navegador
+  const [agendaSyncReady, setAgendaSyncReady] = useState(false);
+  const [agendaSyncError, setAgendaSyncError] = useState<string | null>(null);
+  const eventsSync = useAgendaSync(events, 'agenda_events', 'eventos', agendaSyncReady, setAgendaSyncError);
+  const contactsSync = useAgendaSync(contacts, 'agenda_contacts', 'contatos', agendaSyncReady, setAgendaSyncError);
+  const tasksSync = useAgendaSync(tasks, 'agenda_tasks', 'tarefas', agendaSyncReady, setAgendaSyncError);
+  const occurrencesSync = useAgendaSync(occurrences, 'agenda_occurrences', 'ocorrências', agendaSyncReady, setAgendaSyncError);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const sources = [
+        { collection: 'agenda_events' as const, set: setEvents as (v: any[]) => void, current: events, sync: eventsSync },
+        { collection: 'agenda_contacts' as const, set: setContacts as (v: any[]) => void, current: contacts, sync: contactsSync },
+        { collection: 'agenda_tasks' as const, set: setTasks as (v: any[]) => void, current: tasks, sync: tasksSync },
+        { collection: 'agenda_occurrences' as const, set: setOccurrences as (v: any[]) => void, current: occurrences, sync: occurrencesSync },
+      ];
+      const results = await Promise.all(sources.map(src => fetchDocuments<any>(src.collection)));
+      if (!active) return;
+      if (results.some(r => r === null)) {
+        setAgendaSyncError('Não foi possível ler a agenda do banco de dados. As alterações estão sendo mantidas apenas neste navegador.');
+        return;
+      }
+      sources.forEach((src, i) => {
+        const remote = results[i]!;
+        if (remote.length > 0) {
+          src.set(remote);
+          (src.sync.resetBaseline as (v: any[]) => void)(remote);
+        } else {
+          // Banco vazio: dados de exemplo locais não são enviados em massa
+          (src.sync.resetBaseline as (v: any[]) => void)(src.current);
+        }
+      });
+      setAgendaSyncReady(true);
+    })();
+    return () => { active = false; };
+  // Carga única ao abrir o módulo
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Handle header action trigger
   useEffect(() => {
@@ -676,6 +737,11 @@ export const AgendaProModule: React.FC<AgendaProModuleProps> = ({
 
   return (
     <div className="space-y-6">
+      {agendaSyncError && (
+        <div role="alert" className="mb-3 p-3 rounded-xl border border-amber-500/40 bg-amber-500/10 text-xs text-amber-800 dark:text-amber-300">
+          ⚠️ {agendaSyncError}
+        </div>
+      )}
       
       {/* 🔔 ACTIVE ALARM POPUP */}
       {activeAlarm && (

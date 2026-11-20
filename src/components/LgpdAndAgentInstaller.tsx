@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { 
+import { DEFAULT_TENANT_TOKEN, DEFAULT_SERVER_URL, getIndividualPsScript, getBatchScript, getGpoScript, getUnixScript } from '../utils/installerScripts';
+import {
   ShieldCheck, 
   Download, 
   Terminal, 
@@ -28,8 +29,8 @@ import {
 export const LgpdAndAgentInstaller: React.FC = () => {
   const [activeInstallerType, setActiveInstallerType] = useState<'individual' | 'gpo' | 'mac_linux'>('individual');
   const [copiedScript, setCopiedScript] = useState<string | null>(null);
-  const [tenantToken, setTenantToken] = useState('wp-prod-token-994821a8-8f82-4e89-a212-32b220199211');
-  const [serverUrl, setServerUrl] = useState('https://app.workpulse.io');
+  const [tenantToken, setTenantToken] = useState(DEFAULT_TENANT_TOKEN);
+  const [serverUrl, setServerUrl] = useState(DEFAULT_SERVER_URL);
   const [employeeName, setEmployeeName] = useState('');
   const [department, setDepartment] = useState('TI / Infraestrutura');
   const [roomLocation, setRoomLocation] = useState('Sala de Operações / NOC');
@@ -47,139 +48,13 @@ export const LgpdAndAgentInstaller: React.FC = () => {
     status: string;
   } | null>(null);
 
-  // Individual Windows 1-Click PowerShell Script
-  const individualPsScript = `# ==============================================================================
-# WORKPULSE AGENT - INSTALADOR INDIVIDUAL (1 CLIQUE / PC AVULSO)
-# ==============================================================================
-# Empresa / Tenant Token: ${tenantToken}
-# Servidor: ${serverUrl}
-# Departamento Alvo: ${department || 'Geral'}
-# Localizacao: ${roomLocation || 'Matriz'}
-# ==============================================================================
-
-Write-Host ">>> [WorkPulse Agent] Iniciando instalacao no computador local..." -ForegroundColor Cyan
-
-$TenantToken = "${tenantToken}"
-$ServerUrl = "${serverUrl}"
-$InstallDir = "C:\\Program Files\\WorkPulse\\Agent"
-
-# 1. Cria Diretorio de Execucao
-if (!(Test-Path $InstallDir)) {
-    New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null
-}
-
-# 2. Coleta de Hardware e Identificacao Patrimonial (ITAM)
-Write-Host ">>> [ITAM] Coletando informacoes de Hardware e Rede..." -ForegroundColor Yellow
-$ComputerInfo = Get-CimInstance Win32_ComputerSystem
-$BiosInfo = Get-CimInstance Win32_BIOS
-$Processor = (Get-CimInstance Win32_Processor).Name
-$TotalRAM = [math]::Round((Get-CimInstance Win32_OperatingSystem).TotalVisibleMemorySize / 1MB, 2)
-$Disk = (Get-CimInstance Win32_LogicalDisk -Filter "DeviceID='C:'")
-$DiskFreeGB = [math]::Round($Disk.FreeSpace / 1GB, 1)
-$DiskTotalGB = [math]::Round($Disk.Size / 1GB, 1)
-$NetAdapter = Get-CimInstance Win32_NetworkAdapterConfiguration | Where-Object { $_.IPEnabled -eq $true } | Select-Object -First 1
-
-$Payload = @{
-    TenantToken = $TenantToken
-    Hostname = $env:COMPUTERNAME
-    Username = $env:USERNAME
-    SerialNumber = $BiosInfo.SerialNumber
-    Manufacturer = $ComputerInfo.Manufacturer
-    Model = $ComputerInfo.Model
-    CPU = $Processor
-    RAM_GB = $TotalRAM
-    Disk = "C: $DiskFreeGB GB livres de $DiskTotalGB GB"
-    IPv4 = $NetAdapter.IPAddress[0]
-    MAC = $NetAdapter.MACAddress
-    Department = "${department}"
-    Location = "${roomLocation}"
-    InstalledAt = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
-} | ConvertTo-Json
-
-# 3. Cria e Registra o Servico Local do Windows
-Write-Host ">>> [Servico] Registrando servico em segundo plano 'WorkPulseAgent'..." -ForegroundColor Yellow
-$ServiceScript = @"
-while(\$true) {
-    # Telemetria de Atividade e Hardware a cada 30 segundos
-    Start-Sleep -Seconds 30
-}
-"@
-Set-Content -Path "\$InstallDir\\agent_service.ps1" -Value $ServiceScript
-
-# 4. Envia Registro Inicial para o Servidor (ITAM & Topologia)
-try {
-    Write-Host ">>> [Cloud Sync] Vinculando ativo ao painel de Gestao de Ativos (ITAM)..." -ForegroundColor Green
-    # Invoke-RestMethod -Uri "\$ServerUrl/api/itam/register" -Method Post -Body \$Payload -ContentType "application/json"
-    Write-Host ">>> [SUCESSO] Computador \$env:COMPUTERNAME registrado com sucesso!" -ForegroundColor Green
-} catch {
-    Write-Warning "Agente configurado para sincronizacao local em buffer."
-}
-
-Write-Host ">>> Agente Individual Ativo e Monitorando com Protecao LGPD!" -ForegroundColor Cyan`;
-
-  // Quick Terminal One-Liner
-  const oneLinerCommand = `powershell -ExecutionPolicy Bypass -Command "Invoke-Expression (New-Object Net.WebClient).DownloadString('${serverUrl}/agent/install.ps1?token=${tenantToken}&dept=${encodeURIComponent(department)}')"` ;
-
-  // Windows Batch File (.BAT)
-  const batchScript = `@echo off
-:: ==========================================================
-:: WorkPulse Agent - Instalador Rapido para PC Individual
-:: ==========================================================
-title Instalando WorkPulse Agent...
-color 0A
-echo.
-echo ==========================================================
-echo    INSTALADOR INDIVIDUAL DO AGENTE WORKPULSE
-echo ==========================================================
-echo Token: ${tenantToken}
-echo Servidor: ${serverUrl}
-echo.
-echo [1/3] Verificando privilegios de administrador...
-net session >nul 2>&1
-if %errorLevel% neq 0 (
-    echo [ERRO] Execute este arquivo como ADMINISTRADOR (Botao direito - Executar como Administrador)
-    pause
-    exit /b 1
-)
-
-echo [2/3] Baixando e configurando o servico local de telemetria...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "${oneLinerCommand}"
-
-echo.
-echo [3/3] Sucesso! Hardware e Estacao cadastrados na Gestao de Ativos.
-echo.
-pause
-exit /b 0`;
-
-  // Active Directory GPO Script
-  const gpoScript = `# Script de Instalacao Silenciosa do Agente WorkPulse via Active Directory / GPO
-$InstallerPath = "\\\\domain.local\\SYSVOL\\Installers\\WorkPulseAgent-v4.2.1.msi"
-$TenantToken = "${tenantToken}"
-$LogPath = "C:\\Windows\\Temp\\WorkPulseInstall.log"
-
-Start-Process msiexec.exe -ArgumentList "/i \`"$InstallerPath\`" TENANT_TOKEN=\`"$TenantToken\`" /qn /norestart /L*V \`"$LogPath\`"" -Wait
-Write-Host "Agente Corporativo WorkPulse instalado silenciosamente com sucesso via GPO!"`;
-
-  // Linux / macOS script
-  const unixScript = `#!/usr/bin/env bash
-# Instalador Agente WorkPulse (Linux / macOS Daemon)
-set -e
-echo ">>> Instalando Agente WorkPulse para $(uname -s)..."
-export TENANT_TOKEN="${tenantToken}"
-export SERVER_URL="${serverUrl}"
-
-mkdir -p /opt/workpulse/agent
-cat << 'EOF' > /opt/workpulse/agent/config.json
-{
-  "tenant_token": "${tenantToken}",
-  "server_url": "${serverUrl}",
-  "department": "${department}",
-  "location": "${roomLocation}"
-}
-EOF
-
-echo ">>> Coletando Hardware (CPU/RAM/MAC/Discos)..."
-echo ">>> Agente daemon registrado e iniciado com sucesso!"`;
+  // Scripts gerados pelo módulo compartilhado (mesmo código usado pela rota /api/v1/agent/install.ps1)
+  const individualPsScript = getIndividualPsScript(tenantToken, serverUrl, department, roomLocation);
+  const batchScript = getBatchScript(tenantToken, serverUrl, department);
+  const gpoScript = getGpoScript(tenantToken);
+  const unixScript = getUnixScript(tenantToken, serverUrl, department, roomLocation);
+  // Comando para colar no PowerShell (Administrador): baixa o instalador validado pelo token
+  const oneLinerCommand = `[Net.ServicePointManager]::SecurityProtocol = 'Tls12'; iex ((New-Object Net.WebClient).DownloadString('${serverUrl}/api/v1/agent/install.ps1?token=${encodeURIComponent(tenantToken).replace(/'/g, '%27')}&dept=${encodeURIComponent(department).replace(/'/g, '%27')}'))`;
 
   const copyToClipboard = (text: string, type: string) => {
     navigator.clipboard.writeText(text);
