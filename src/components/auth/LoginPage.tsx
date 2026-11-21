@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { signIn, signOut } from '../../services/supabase/auth.service';
+import { signIn, signOut, requestPasswordReset } from '../../services/supabase/auth.service';
 import { isSupabaseConfigured } from '../../lib/supabaseClient';
 import { isAuthorizedEmail } from '../../services/sessionSecurity';
 import type { Session } from '@supabase/supabase-js';
@@ -15,10 +15,41 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSendingReset, setIsSendingReset] = useState(false);
+  const [info, setInfo] = useState<string | null>(null);
+
+  async function handleForgotPassword() {
+    setError(null);
+    setInfo(null);
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail) {
+      setError('Digite seu e-mail no campo acima e clique de novo em "Esqueci minha senha".');
+      return;
+    }
+    if (!isSupabaseConfigured()) {
+      setError('Autenticação indisponível: Supabase não configurado.');
+      return;
+    }
+    setIsSendingReset(true);
+    try {
+      const result = await requestPasswordReset(cleanEmail);
+      if (!result.success) {
+        setError(result.error || 'Não foi possível enviar o e-mail de recuperação.');
+        return;
+      }
+      // Mesma mensagem exista ou não a conta, para não revelar quais e-mails estão cadastrados
+      setInfo(`Se ${cleanEmail} tiver acesso, você receberá um e-mail com o link para criar uma nova senha.`);
+    } catch {
+      setError('Erro de conexão ao solicitar a recuperação de senha.');
+    } finally {
+      setIsSendingReset(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setInfo(null);
 
     const cleanEmail = email.trim().toLowerCase();
 
@@ -89,6 +120,13 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
             </div>
           )}
 
+          {info && (
+            <div className="mb-4 flex items-start gap-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-3">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
+              <p className="text-emerald-300 text-sm">{info}</p>
+            </div>
+          )}
+
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email */}
@@ -137,6 +175,17 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
                   {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
                 </button>
               </div>
+            </div>
+
+            <div className="flex justify-end -mt-1">
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                disabled={isLoading || isSendingReset}
+                className="text-xs text-blue-300 hover:text-blue-200 transition disabled:opacity-60 cursor-pointer"
+              >
+                {isSendingReset ? 'Enviando e-mail...' : 'Esqueci minha senha'}
+              </button>
             </div>
 
             {/* Submit Button */}
