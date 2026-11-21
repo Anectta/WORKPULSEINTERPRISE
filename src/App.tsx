@@ -14,6 +14,8 @@ import { fetchAssets, upsertAssets, deleteAsset } from './services/supabase/asse
 import { useSupabaseCollectionSync } from './hooks/useSupabaseCollectionSync';
 import { fetchDocuments, upsertDocuments, deleteDocument, DocumentCollection } from './services/supabase/documents.service';
 import { LoginPage } from './components/auth/LoginPage';
+import { ResetPasswordPage } from './components/auth/ResetPasswordPage';
+import { passwordRecoveryRequested } from './lib/supabaseClient';
 import { 
   Employee, 
   ActivityLog, 
@@ -88,6 +90,8 @@ export default function App() {
   // =========================================================================
   // undefined = verificando sessão; null = sem sessão; Session = autenticado no Supabase Auth
   const [authSession, setAuthSession] = useState<Session | null | undefined>(undefined);
+  // Chegou pelo link "Redefinir senha" do e-mail: pede a nova senha antes de liberar o sistema
+  const [passwordRecovery, setPasswordRecovery] = useState<boolean>(passwordRecoveryRequested);
 
   useEffect(() => {
     // Remove a antiga sessão local forjável, se ainda existir neste navegador
@@ -116,7 +120,10 @@ export default function App() {
     });
 
     // Login, logout, renovação de token e revogação vindos do Supabase
-    const { unsubscribe } = onAuthStateChange(applySession);
+    const { unsubscribe } = onAuthStateChange((session, event) => {
+      if (event === 'PASSWORD_RECOVERY' && active) setPasswordRecovery(true);
+      applySession(session);
+    });
 
     return () => {
       active = false;
@@ -879,6 +886,26 @@ export default function App() {
     return (
       <LoginPage
         onLoginSuccess={(session) => setAuthSession(session)}
+      />
+    );
+  }
+
+  // Sessão aberta pelo link de recuperação: exige a nova senha antes de entrar
+  if (passwordRecovery) {
+    const finishRecovery = () => {
+      setPasswordRecovery(false);
+      // Remove os parâmetros do link (token já consumido) da barra de endereço
+      window.history.replaceState(null, '', window.location.pathname);
+    };
+    return (
+      <ResetPasswordPage
+        email={authSession.user?.email}
+        onDone={finishRecovery}
+        onCancel={() => {
+          finishRecovery();
+          supabaseSignOut().catch(() => {});
+          setAuthSession(null);
+        }}
       />
     );
   }

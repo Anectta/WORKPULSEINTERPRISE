@@ -20,6 +20,14 @@ export const isSupabaseConfigured = (): boolean => {
   );
 };
 
+/**
+ * Link de recuperação de senha do e-mail do Supabase (".../#access_token=...&type=recovery").
+ * Precisa ser lido ANTES de createClient: o SDK consome e limpa o hash da URL ao iniciar.
+ */
+export const passwordRecoveryRequested: boolean =
+  typeof window !== 'undefined' &&
+  /(^|[#?&])type=recovery(&|$)/.test(`${window.location.hash}&${window.location.search}`);
+
 // Initialize Supabase Client instance (or lazy/dummy when not configured yet)
 export const supabase: SupabaseClient = createClient(
   supabaseUrl || 'https://placeholder.supabase.co',
